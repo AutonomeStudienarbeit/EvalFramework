@@ -8,7 +8,7 @@ def download_from_kaggle(dataset):
 def install_dataset(dataset_name):
     dataset_properties = available_datasets.get(dataset_name)
     if dataset_properties.get("is_kaggle"):
-        download_from_kaggle(dataset_properties.get("download_url"))
+        download_from_kaggle(dataset_name)
 
 
 def get_directory_content():
