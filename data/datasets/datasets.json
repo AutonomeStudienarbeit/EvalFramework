@@ -1,0 +1,16 @@
+{
+    "name": {
+        "description": "",
+        "url": "",
+        "download_url": "",
+        "install_func": "",
+        "version": ""
+    },
+    "GTSRB": {
+        "description": "German Traffic Sign Recognition Benchmark",
+        "url": "https://www.kaggle.com/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign",
+        "download_url": "meowmeowmeowmeowmeow/gtsrb-german-traffic-sign",
+        "is_kaggle": true,
+        "version": ""
+    }
+}
