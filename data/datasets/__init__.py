@@ -44,12 +44,47 @@ class Dataset:
         self.url = dataset_properties.get("url")
         self.version = dataset_properties.get("version")
         self.dataset_id = dataset_id
-        self.ZipFile = ZipFile(zip_file_name)
-        self.zip_content = self.ZipFile.namelist()
+        self._zip_file = ZipFile(zip_file_name)
+        self.zip_content = self._zip_file.namelist()
         toplevel = {entry.split("/")[0] for entry in self.zip_content}
         self.folders = {entry for entry in toplevel if match_regex("^(?!.*[.]).*", entry)}
-        self.description_csvs = {entry for entry in toplevel if match_regex(".*([.]csv)", entry)}
+        self.csv_files = {entry for entry in toplevel if match_regex(".*([.]csv)", entry)}
+        self._train_subset = None
+        self._test_subset = None
+
+    def load_train_subset(self):
+        if self._train_subset:
+            return self._train_subset
+
+        if "train" in self.folders:
+            self._train_subset = self.get_subset_by_folder("train")
+            return self._train_subset
+        elif "Test" in self.folders:
+            self._train_subset = self.get_subset_by_folder("Train")
+            return self._train_subset
+        else:
+            raise FileNotFoundError("Could not find Train / train folder in dataset")
+
+    def load_test_subset(self):
+        if self._test_subset:
+            return self._test_subset
+
+        if "test" in self.folders:
+            self._test_subset = self.get_subset_by_folder("test")
+            return self._test_subset
+        elif "Test" in self.folders:
+            self._test_subset = self.get_subset_by_folder("Test")
+            return self._test_subset
+        else:
+            raise FileNotFoundError("Could not find Test / test folder in dataset")
+
+    def get_subset_by_folder(self, folder):
+        return {entry for entry in self.zip_content if entry.split("/")[0] == folder}
 
 
 dataset_loader = DatasetLoader()
-dataset_loader.load_dataset("GTSRB")
+gtsrb_dataset = dataset_loader.load_dataset("GTSRB")
+print(gtsrb_dataset.folders)
+print(gtsrb_dataset.csv_files)
+train_subset = gtsrb_dataset.load_train_subset()
+print(train_subset)
