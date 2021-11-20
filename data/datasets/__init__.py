@@ -81,10 +81,10 @@ class Dataset:
     def get_subset_by_folder(self, folder):
         return {entry for entry in self.zip_content if entry.split("/")[0] == folder}
 
-
-dataset_loader = DatasetLoader()
-gtsrb_dataset = dataset_loader.load_dataset("GTSRB")
-print(gtsrb_dataset.folders)
-print(gtsrb_dataset.csv_files)
-train_subset = gtsrb_dataset.load_train_subset()
-print(train_subset)
+#
+# dataset_loader = DatasetLoader()
+# gtsrb_dataset = dataset_loader.load_dataset("GTSRB")
+# print(gtsrb_dataset.folders)
+# print(gtsrb_dataset.csv_files)
+# train_subset = gtsrb_dataset.load_train_subset()
+# print(train_subset)
