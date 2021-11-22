@@ -2,14 +2,15 @@ class DatasetLoader:
 
     def __init__(self):
         from json import load
-        self.available_datasets = load(open('datasets.json'))
+        from os import path as os_path, getcwd
+        self.__location__ = os_path.realpath(os_path.join(getcwd(), os_path.dirname(__file__)))
+        self.available_datasets = load(open(os_path.join(self.__location__, 'datasets.json')))
 
-    @staticmethod
-    def download_from_kaggle(dataset_properties):
+    def download_from_kaggle(self, dataset_properties):
         from kaggle.api.kaggle_api_extended import KaggleApi
         api = KaggleApi()
         api.authenticate()
-        api.dataset_download_files(dataset_properties.get("download_url"), quiet=False)
+        api.dataset_download_files(dataset_properties.get("download_url"), quiet=False, path=self.__location__)
         out_file_name = f"{dataset_properties.get('download_url').split('/')[1]}.zip"
         return out_file_name
 
@@ -18,10 +19,9 @@ class DatasetLoader:
         if dataset_properties.get("is_kaggle"):
             return self.download_from_kaggle(dataset_properties)
 
-    @staticmethod
-    def get_directory_content():
+    def get_directory_content(self):
         from os import listdir
-        return listdir("./")
+        return listdir(self.__location__)
 
     def load_dataset(self, dataset_name):
         if dataset_name not in self.available_datasets.keys():
@@ -40,11 +40,13 @@ class Dataset:
     def __init__(self, dataset_id, zip_file_name, dataset_properties):
         from zipfile import ZipFile
         from re import match as match_regex
+        from os import path as os_path, getcwd
         self.description = dataset_properties.get("description")
         self.url = dataset_properties.get("url")
         self.version = dataset_properties.get("version")
         self.dataset_id = dataset_id
-        self._zip_file = ZipFile(zip_file_name)
+        __location__ = os_path.realpath(os_path.join(getcwd(), os_path.dirname(__file__)))
+        self._zip_file = ZipFile(os_path.join(__location__, zip_file_name))
         self.zip_content = self._zip_file.namelist()
         toplevel = {entry.split("/")[0] for entry in self.zip_content}
         self.folders = {entry for entry in toplevel if match_regex("^(?!.*[.]).*", entry)}
@@ -80,11 +82,3 @@ class Dataset:
 
     def get_subset_by_folder(self, folder):
         return {entry for entry in self.zip_content if entry.split("/")[0] == folder}
-
-#
-# dataset_loader = DatasetLoader()
-# gtsrb_dataset = dataset_loader.load_dataset("GTSRB")
-# print(gtsrb_dataset.folders)
-# print(gtsrb_dataset.csv_files)
-# train_subset = gtsrb_dataset.load_train_subset()
-# print(train_subset)
