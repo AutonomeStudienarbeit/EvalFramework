@@ -10,7 +10,14 @@
         "description": "German Traffic Sign Recognition Benchmark",
         "url": "https://www.kaggle.com/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign",
         "download_url": "meowmeowmeowmeowmeow/gtsrb-german-traffic-sign",
-        "is_kaggle": true,
+        "download_api": "kaggle",
+        "version": ""
+    },
+    "Cityscapes-Fine": {
+        "description": "Cityscapes dataset with fine annotations",
+        "url": "https://www.cityscapes-dataset.com/",
+        "download_url": "gtFine_trainvaltest.zip",
+        "download_api": "cityscapesscripts",
         "version": ""
     }
 }

@@ -7,6 +7,16 @@ class DatasetLoader:
         dataset_json_file = open(os_path.join(self.__location__, 'datasets.json'))
         self.available_datasets = load(dataset_json_file)
         dataset_json_file.close()
+        self.dataset_apis = {
+            "kaggle": self.download_from_kaggle,
+            "cityscapesscripts": self.download_cityscapes
+        }
+
+    def download_cityscapes(self, dataset_properties):
+        from os import system as run_in_terminal
+        cs_package_id = dataset_properties.get("download_url")
+        run_in_terminal("cd " + self.__location__ + "; " + "csDownload " + cs_package_id)
+        return cs_package_id
 
     def download_from_kaggle(self, dataset_properties):
         from kaggle.api.kaggle_api_extended import KaggleApi
@@ -18,8 +28,7 @@ class DatasetLoader:
 
     def install_dataset(self, dataset_name):
         dataset_properties = self.available_datasets.get(dataset_name)
-        if dataset_properties.get("is_kaggle"):
-            return self.download_from_kaggle(dataset_properties)
+        return self.dataset_apis.get(dataset_properties.get("download_api"))(dataset_properties)
 
     def get_directory_content(self):
         from os import listdir
