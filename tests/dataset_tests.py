@@ -8,13 +8,13 @@ class dataset_tests(TestCase):
     datasets_folder = path.realpath(getcwd() + "/../data/datasets/")
 
     def test_gtsrb(self):
-        if "gtsrb-german-traffic-sign.zip" in listdir(self.datasets_folder):
-            remove(self.datasets_folder + "/gtsrb-german-traffic-sign.zip")
+        if "gtsrb.zip" in listdir(self.datasets_folder):
+            remove(self.datasets_folder + "/gtsrb.zip")
 
         dataset_loader = DatasetLoader()
         gtsrb_dataset = dataset_loader.load_dataset("GTSRB")
-        self.assertTrue("gtsrb-german-traffic-sign.zip" in listdir(self.datasets_folder),
-                        "gtsrb-german-traffic-sign.zip not found!")
+        self.assertTrue("gtsrb.zip" in listdir(self.datasets_folder),
+                        "gtsrb.zip not found!")
         self.assertSetEqual(gtsrb_dataset.folders, {'Test', 'test', 'train', 'Train', 'Meta', 'meta'},
                             "Folder Structure of gtsrb.zip not as expected!")
         self.assertSetEqual(gtsrb_dataset.csv_files, {'Train.csv', 'Meta.csv', 'Test.csv'},
@@ -29,5 +29,6 @@ class dataset_tests(TestCase):
             remove(self.datasets_folder + "/gtFine_trainvaltest.zip")
         dataset_loader = DatasetLoader()
         cs_fine_dataset = dataset_loader.load_dataset("Cityscapes-Fine")
-        self.assertTrue("gtFine_trainvaltest.zip" in listdir(self.datasets_folder),
-                        "gtFine_trainvaltest.zip not found!")
+        self.assertTrue("cityscapes-fine.zip" in listdir(self.datasets_folder),
+                        "cityscapes-fine.zip not found!")
+        print(cs_fine_dataset.folders)
