@@ -4,7 +4,9 @@ class DatasetLoader:
         from json import load
         from os import path as os_path, getcwd
         self.__location__ = os_path.realpath(os_path.join(getcwd(), os_path.dirname(__file__)))
-        self.available_datasets = load(open(os_path.join(self.__location__, 'datasets.json')))
+        dataset_json_file = open(os_path.join(self.__location__, 'datasets.json'))
+        self.available_datasets = load(dataset_json_file)
+        dataset_json_file.close()
 
     def download_from_kaggle(self, dataset_properties):
         from kaggle.api.kaggle_api_extended import KaggleApi
