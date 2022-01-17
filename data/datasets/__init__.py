@@ -1,12 +1,11 @@
+from data.datasets.available_datasets import available_datasets
+
+
 class DatasetLoader:
 
     def __init__(self):
-        from json import load
         from os import path as os_path, getcwd
         self.__location__ = os_path.realpath(os_path.join(getcwd(), os_path.dirname(__file__)))
-        dataset_json_file = open(os_path.join(self.__location__, 'datasets.json'))
-        self.available_datasets = load(dataset_json_file)
-        dataset_json_file.close()
 
         self.dataset_apis = {
             "kaggle": self.download_from_kaggle,
@@ -29,7 +28,7 @@ class DatasetLoader:
 
     def install_dataset(self, dataset_name):
         from os import rename
-        dataset_properties = self.available_datasets.get(dataset_name)
+        dataset_properties = available_datasets.get(dataset_name)
         file_name = self.dataset_apis.get(dataset_properties.get("download_api"))(dataset_properties)
         dataset_name_lower = dataset_name.lower()
         rename(f"{self.__location__}/{file_name}", f"{self.__location__}/{dataset_name_lower}.zip")
@@ -40,7 +39,7 @@ class DatasetLoader:
         return listdir(self.__location__)
 
     def load_dataset(self, dataset_name):
-        if dataset_name not in self.available_datasets.keys():
+        if dataset_name not in available_datasets.keys():
             raise ValueError(f"The dataset of name {dataset_name} is unavailable")
 
         dir_content = self.get_directory_content()
@@ -48,25 +47,29 @@ class DatasetLoader:
         file_name = next((entry for entry in dir_content if dataset_name_lower in entry), None)
         if file_name is None:
             file_name = self.install_dataset(dataset_name)
-        return Dataset(dataset_name, file_name, self.available_datasets.get(dataset_name))
+            required_dataset = available_datasets.get(dataset_name).get("required_data")
+            if required_dataset != "":
+                self.install_dataset(required_dataset)
+        return Dataset(dataset_name)
 
 
 class Dataset:
 
-    def __init__(self, dataset_id, zip_file_name, dataset_properties):
-        from zipfile import ZipFile
-        from re import match as match_regex
+    def __init__(self, dataset_id):
         from os import path as os_path, getcwd
-        self.description = dataset_properties.get("description")
-        self.url = dataset_properties.get("url")
-        self.version = dataset_properties.get("version")
         self.dataset_id = dataset_id
-        __location__ = os_path.realpath(os_path.join(getcwd(), os_path.dirname(__file__)))
-        self._zip_file = ZipFile(os_path.join(__location__, zip_file_name))
-        self.zip_content = self._zip_file.namelist()
-        toplevel = {entry.split("/")[0] for entry in self.zip_content}
-        self.folders = {entry for entry in toplevel if match_regex("^(?!.*[.]).*", entry)}
-        self.csv_files = {entry for entry in toplevel if match_regex(".*([.]csv)", entry)}
+        self.dataset_properties = available_datasets.get(dataset_id)
+        self.description = self.dataset_properties.get("description")
+        self.url = self.dataset_properties.get("url")
+        self.version = self.dataset_properties.get("version")
+        self.dataset_id = dataset_id
+        self.__location__ = os_path.realpath(os_path.join(getcwd(), os_path.dirname(__file__)))
+        self.folders, self.csv_files, self.zip_content = self.load_zip(dataset_id)
+
+        if self.dataset_properties.get("required_data") != "":
+            folders_required_set, csv_files_required_set, zip_content_required_set = self.load_zip(self.dataset_properties.get("required_data"))
+            self.folders, self.csv_files, self.zip_content = [*self.folders, *folders_required_set], [*self.csv_files, *csv_files_required_set], [*self.zip_content, *zip_content_required_set]
+
         self._train_subset = None
         self._test_subset = None
 
@@ -98,3 +101,15 @@ class Dataset:
 
     def get_subset_by_folder(self, folder):
         return {entry for entry in self.zip_content if entry.split("/")[0] == folder}
+
+    def load_zip(self, dataset_id):
+        from zipfile import ZipFile
+        from re import match as match_regex
+        from os import path
+        zip_file_name = dataset_id.lower() + ".zip"
+        zip_file = ZipFile(path.join(self.__location__, zip_file_name))
+        zip_content = zip_file.namelist()
+        toplevel = {entry.split("/")[0] for entry in zip_content}
+        folders = [entry for entry in toplevel if match_regex("^(?!.*[.]).*", entry)]
+        csv_files = [entry for entry in toplevel if match_regex(".*([.]csv)", entry)]
+        return folders, csv_files, zip_content
