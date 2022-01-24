@@ -1,3 +1,5 @@
+import os
+
 from data.datasets.available_datasets import available_datasets
 
 
@@ -38,15 +40,21 @@ class DatasetLoader:
         from os import listdir
         return listdir(self.__location__)
 
+    def unzip_dataset(self, file_name):
+        from zipfile import ZipFile
+        z = ZipFile(self.__location__ + f"/{file_name}")
+        z.extractall(self.__location__ + f"/{file_name[:-4]}")
+
     def load_dataset(self, dataset_name):
         if dataset_name not in available_datasets.keys():
             raise ValueError(f"The dataset of name {dataset_name} is unavailable")
 
         dir_content = self.get_directory_content()
         dataset_name_lower = dataset_name.lower()
-        file_name = next((entry for entry in dir_content if dataset_name_lower in entry), None)
+        file_name = next((entry for entry in dir_content if f"{dataset_name_lower}.zip" in entry), None)
         if file_name is None:
             file_name = self.install_dataset(dataset_name)
+            self.unzip_dataset(file_name)
             required_dataset = available_datasets.get(dataset_name).get("required_data")
             if required_dataset != "":
                 self.install_dataset(required_dataset)

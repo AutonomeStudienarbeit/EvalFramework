@@ -7,8 +7,8 @@ class DatasetTests(TestCase):
     datasets_folder = path.realpath(getcwd() + "/../data/datasets/")
 
     def test_gtsrb(self):
-        # if "gtsrb.zip" in listdir(self.datasets_folder):
-        #     remove(self.datasets_folder + "/gtsrb.zip")
+        if "gtsrb.zip" in listdir(self.datasets_folder):
+            remove(self.datasets_folder + "/gtsrb.zip")
 
         dataset_loader = DatasetLoader()
         gtsrb_dataset = dataset_loader.load_dataset("GTSRB")
@@ -23,13 +23,13 @@ class DatasetTests(TestCase):
         test_subset = gtsrb_dataset.load_test_subset()
         self.assertGreater(len(test_subset), 0, "Length of test subset is not greater than 0")
 
-    def test_cityscapes_fine(self):
-        # if "cityscapes-fine.zip" in listdir(self.datasets_folder):
-        # remove(self.datasets_folder + "/cityscapes-fine.zip")
-        dataset_loader = DatasetLoader()
-        cs_fine_dataset = dataset_loader.load_dataset("Cityscapes-Fine")
-        self.assertTrue("cityscapes-fine.zip" in listdir(self.datasets_folder),
-                        "cityscapes-fine.zip not found!")
-        self.assertTrue("cityscapes-fine-images.zip" in listdir(self.datasets_folder),
-                        "cityscapes-fine-images.zip not found!")
-        print(cs_fine_dataset.folders)
+    # def test_cityscapes_fine(self):
+    #     # if "cityscapes-fine.zip" in listdir(self.datasets_folder):
+    #     # remove(self.datasets_folder + "/cityscapes-fine.zip")
+    #     dataset_loader = DatasetLoader()
+    #     cs_fine_dataset = dataset_loader.load_dataset("Cityscapes-Fine")
+    #     self.assertTrue("cityscapes-fine.zip" in listdir(self.datasets_folder),
+    #                     "cityscapes-fine.zip not found!")
+    #     self.assertTrue("cityscapes-fine-images.zip" in listdir(self.datasets_folder),
+    #                     "cityscapes-fine-images.zip not found!")
+    #     print(cs_fine_dataset.folders)

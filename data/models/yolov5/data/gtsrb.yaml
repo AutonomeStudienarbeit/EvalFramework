@@ -1,0 +1,7 @@
+path: ../../datasets/gtsrb
+train: train
+val: test
+test:
+
+nc: 43 #Number of classes
+names: []

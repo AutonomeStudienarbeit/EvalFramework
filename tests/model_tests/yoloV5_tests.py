@@ -1,4 +1,4 @@
-from data.models.yoloV5_torch.yoloV5 import YoloV5
+from data.models.yoloV5.yoloV5 import YoloV5
 from PIL import Image
 from requests import get
 
