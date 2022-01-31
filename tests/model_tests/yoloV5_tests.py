@@ -1,8 +1,11 @@
-from data.models.yoloV5.yoloV5 import YoloV5
-from PIL import Image
-from requests import get
+from unittest import TestCase
+from os import path, getcwd, listdir
+from data.models.yolov5 import YoloV5
 
-yoloV5 = YoloV5()
-image = cat_url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-cat_image = Image.open(get(cat_url, stream=True).raw)
-print(yoloV5.run_inference(cat_image))
+class YoloV5Tests(TestCase):
+    datasets_folder = path.realpath(getcwd() + "/../../data/datasets/")
+
+    def test_gtsrb_dataset_prep(self):
+        yolov5 = YoloV5()
+        yolov5.prepare_dataset("gtsrb")
+        self.assertTrue("train_paths.txt" in listdir(f"{self.datasets_folder}/gtsrb/"))
