@@ -1,5 +1,8 @@
 import os
 import pandas as pd
+import numpy as np
+
+from shutil import move
 
 
 class YoloV5:
@@ -14,20 +17,22 @@ class YoloV5:
     def _prepare_gtsrb(self):
         # collect gtsrb file paths in txt file, so that yolo can read the dataset
         gtsrb_root = self.__location__ + "/../../datasets/gtsrb/"
-        gtsrb_train = gtsrb_root + "train/"
-        gtsrb_test = gtsrb_root + "test/"
-        train_set = []
-        test_set = []
+        gtsrb_train = gtsrb_root + "Train/"
+        gtsrb_test = gtsrb_root + "Test/"
 
-        for class_folder in os.listdir(gtsrb_train):
-            for file in os.listdir(gtsrb_train + f"{class_folder}/"):
-                train_set.append(f"train/{class_folder}/{file}")
+        os.mkdir(f"{gtsrb_train}images/")
+        for folder in os.listdir(gtsrb_train):
+            if folder == "images":
+                continue
+            for image in os.listdir(f"{gtsrb_train}{folder}/"):
+                move(f"{gtsrb_train}{folder}/{image}", f"{gtsrb_train}images/")
+            os.rmdir(f"{gtsrb_train}{folder}")
 
-        for file in os.listdir(gtsrb_test):
-            test_set.append(f"test/{file}")
-
-        self._write_list_to_file(train_set, f"{gtsrb_root}train_paths.txt")
-        self._write_list_to_file(test_set, f"{gtsrb_root}test_paths.txt")
+        os.mkdir(f"{gtsrb_test}images/")
+        for image in os.listdir(gtsrb_test):
+            if image == "images":
+                continue
+            move(f"{gtsrb_test}{image}", f"{gtsrb_test}images/")
 
         # convert gtsrb csv Labels to YoloFileFormat
         # YOLO format:
@@ -38,12 +43,33 @@ class YoloV5:
         #   by image width, and y_center and height by image height
         # - Class numbers are zero-indexed (start from 0)
 
-        train_df = pd.read_csv(f"{gtsrb_root}Train.csv")
-        test_df = pd.read_csv(f"{gtsrb_root}Test.csv")
+        os.mkdir(f"{gtsrb_train}labels/")
+        os.mkdir(f"{gtsrb_test}labels/")
 
+        # [train_df, test_df]
+        dfs = [pd.read_csv(f"{gtsrb_root}Train.csv"), pd.read_csv(f"{gtsrb_root}Test.csv")]
+        for subset_df in dfs:
+            # Normalize Coordinates
+            subset_df["Roi.X1"] /= subset_df["Width"]
+            subset_df["Roi.X2"] /= subset_df["Width"]
+            subset_df["Roi.Y1"] /= subset_df["Height"]
+            subset_df["Roi.Y2"] /= subset_df["Height"]
 
-    def _write_list_to_file(self, list, path):
-        f = open(path, 'w+')
-        for element in list:
-            f.write(element + "\n")
-        f.close()
+            for index, row in subset_df.iterrows():
+                try:
+                    current_subset_id, _, current_image = row.loc["Path"].split("/")
+                except ValueError:
+                    current_subset_id, current_image = row.loc["Path"].split("/")
+
+                # convert to YoloFormat
+                converted = np.array([
+                    row.loc["ClassId"],
+                    (row.loc["Roi.X1"] + row.loc["Roi.X2"]) / 2.0,
+                    (row.loc["Roi.Y1"] + row.loc["Roi.Y2"]) / 2.0,
+                    row.loc["Roi.X1"] + row.loc["Roi.X2"],
+                    row.loc["Roi.Y1"] + row.loc["Roi.Y2"]
+                ])
+
+                # write to label file
+                with open(f"{gtsrb_root}{current_subset_id}/labels/{current_image[:-4]}.txt", "w+") as f:
+                    f.write(f"{int(converted[0])} {' '.join(map(str, converted[1:]))}")
