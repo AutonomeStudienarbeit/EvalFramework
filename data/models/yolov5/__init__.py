@@ -66,8 +66,8 @@ class YoloV5:
                     row.loc["ClassId"],
                     (row.loc["Roi.X1"] + row.loc["Roi.X2"]) / 2.0,
                     (row.loc["Roi.Y1"] + row.loc["Roi.Y2"]) / 2.0,
-                    row.loc["Roi.X1"] + row.loc["Roi.X2"],
-                    row.loc["Roi.Y1"] + row.loc["Roi.Y2"]
+                    row.loc["Roi.X1"] + row.loc["Roi.X2"] if row.loc["Roi.X1"] + row.loc["Roi.X2"] < 1.0 else 1.0,
+                    row.loc["Roi.Y1"] + row.loc["Roi.Y2"] if row.loc["Roi.Y1"] + row.loc["Roi.Y2"] < 1.0 else 1.0
                 ])
 
                 # write to label file
