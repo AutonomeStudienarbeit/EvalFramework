@@ -29,3 +29,17 @@ class YoloV5Tests(TestCase):
             len(os.listdir(f"{self.datasets_folder}/gtsrb/Test/labels/")),
             "Length of test labels folder does not match"
         )
+
+    def test_gtsdb_dataset_prep(self):
+        yoloV5 = YoloV5()
+        yoloV5.prepare_dataset('gtsdb')
+        self.assertEqual(
+            600,
+            len(os.listdir(f"{self.datasets_folder}/gtsdb/TrainIJCNN2013/images/")),
+            "Length of train images folder does not match"
+        )
+        self.assertEqual(
+            600,
+            len(os.listdir(f"{self.datasets_folder}/gtsdb/TrainIJCNN2013/labels/")),
+            "Length of train labels folder does not match"
+        )

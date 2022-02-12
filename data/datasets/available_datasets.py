@@ -7,12 +7,20 @@ available_datasets = {
         "required_data": "",
         "version": ""
     },
+    "GTSDB": {
+        "description": "German Traffic Sign Detection Benchmark",
+        "url": "https://www.kaggle.com/safabouguezzi/german-traffic-sign-detection-benchmark-gtsdb",
+        "download_url": "safabouguezzi/german-traffic-sign-detection-benchmark-gtsdb",
+        "download_api": "kaggle",
+        "required_data": "",
+        "version": ""
+    },
     "Cityscapes-Fine": {
         "description": "Cityscapes dataset with fine annotations",
         "url": "https://www.cityscapes-dataset.com/",
         "download_url": "gtFine_trainvaltest.zip",
         "download_api": "cityscapesscripts",
-        "required_data":"Cityscapes-Fine-Images",
+        "required_data": "Cityscapes-Fine-Images",
         "version": ""
     },
     "Cityscapes-Fine-Images": {
@@ -20,7 +28,7 @@ available_datasets = {
         "url": "https://www.cityscapes-dataset.com/",
         "download_url": "leftImg8bit_trainvaltest.zip",
         "download_api": "cityscapesscripts",
-        "required_data":"Cityscapes-Fine",
+        "required_data": "Cityscapes-Fine",
         "version": ""
     }
 }

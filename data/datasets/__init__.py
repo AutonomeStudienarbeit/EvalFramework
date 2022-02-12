@@ -75,8 +75,11 @@ class Dataset:
         self.folders, self.csv_files, self.zip_content = self.load_zip(dataset_id)
 
         if self.dataset_properties.get("required_data") != "":
-            folders_required_set, csv_files_required_set, zip_content_required_set = self.load_zip(self.dataset_properties.get("required_data"))
-            self.folders, self.csv_files, self.zip_content = [*self.folders, *folders_required_set], [*self.csv_files, *csv_files_required_set], [*self.zip_content, *zip_content_required_set]
+            folders_required_set, csv_files_required_set, zip_content_required_set = self.load_zip(
+                self.dataset_properties.get("required_data"))
+            self.folders, self.csv_files, self.zip_content = [*self.folders, *folders_required_set], [*self.csv_files,
+                                                                                                      *csv_files_required_set], [
+                                                                 *self.zip_content, *zip_content_required_set]
 
         self._train_subset = None
         self._test_subset = None
@@ -119,5 +122,5 @@ class Dataset:
         zip_content = zip_file.namelist()
         toplevel = {entry.split("/")[0] for entry in zip_content}
         folders = [entry for entry in toplevel if match_regex("^(?!.*[.]).*", entry)]
-        csv_files = [entry for entry in toplevel if match_regex(".*([.]csv)", entry)]
+        csv_files = [entry for entry in toplevel if match_regex(".*([.](csv|txt))", entry)]
         return folders, csv_files, zip_content

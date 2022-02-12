@@ -23,6 +23,20 @@ class DatasetTests(TestCase):
         test_subset = gtsrb_dataset.load_test_subset()
         self.assertGreater(len(test_subset), 0, "Length of test subset is not greater than 0")
 
+    def test_gtsdb(self):
+        if "gtsdb.zip" in listdir(self.datasets_folder):
+            remove(self.datasets_folder + "/gtsdb.zip")
+
+        dataset_loader = DatasetLoader()
+        gtsdb_dataset = dataset_loader.load_dataset("GTSDB")
+        self.assertTrue("gtsdb.zip" in listdir(self.datasets_folder),
+                        "gtsdb.zip not found!")
+        self.assertSetEqual(set(gtsdb_dataset.folders), {'TestIJCNN2013', 'TrainIJCNN2013'},
+                            "Folder Structure of gtsdb.zip not as expected!")
+        self.assertSetEqual(set(gtsdb_dataset.csv_files), {'gt.txt'},
+                            "CSV Files of gtsdb.zip not as expected")
+
+
     # def test_cityscapes_fine(self):
     #     # if "cityscapes-fine.zip" in listdir(self.datasets_folder):
     #     # remove(self.datasets_folder + "/cityscapes-fine.zip")
