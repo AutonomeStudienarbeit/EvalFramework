@@ -33,13 +33,35 @@ class YoloV5Tests(TestCase):
     def test_gtsdb_dataset_prep(self):
         yoloV5 = YoloV5()
         yoloV5.prepare_dataset('gtsdb')
+        train_image_folder_content = os.listdir(f"{self.datasets_folder}/gtsdb/train/images/")
         self.assertEqual(
-            600,
-            len(os.listdir(f"{self.datasets_folder}/gtsdb/TrainIJCNN2013/images/")),
+            360,
+            len(train_image_folder_content),
             "Length of train images folder does not match"
         )
+        self.assertEqual(".jpg", train_image_folder_content[0][-4:], "incorrect image format")
         self.assertEqual(
-            600,
-            len(os.listdir(f"{self.datasets_folder}/gtsdb/TrainIJCNN2013/labels/")),
+            360,
+            len(os.listdir(f"{self.datasets_folder}/gtsdb/train/labels/")),
             "Length of train labels folder does not match"
+        )
+        self.assertEqual(
+            120,
+            len(os.listdir(f"{self.datasets_folder}/gtsdb/test/images/")),
+            "Length of test images folder does not match"
+        )
+        self.assertEqual(
+            120,
+            len(os.listdir(f"{self.datasets_folder}/gtsdb/test/labels/")),
+            "Length of test labels folder does not match"
+        )
+        self.assertEqual(
+            120,
+            len(os.listdir(f"{self.datasets_folder}/gtsdb/val/images/")),
+            "Length of val images folder does not match"
+        )
+        self.assertEqual(
+            120,
+            len(os.listdir(f"{self.datasets_folder}/gtsdb/val/labels/")),
+            "Length of val labels folder does not match"
         )

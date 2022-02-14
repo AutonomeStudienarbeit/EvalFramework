@@ -4,6 +4,14 @@ import numpy as np
 
 from shutil import move
 from re import match as match_regex
+from PIL import Image
+from pathlib import Path
+
+
+def create_nested_folders(*paths):
+    for path in paths:
+        p = Path(path)
+        p.mkdir(parents=True, exist_ok=True)
 
 
 class YoloV5:
@@ -83,10 +91,44 @@ class YoloV5:
         gtsdb_train = f"{gtsdb_root}/TrainIJCNN2013"
         gtsdb_test = f"{gtsdb_root}/TestIJCNN2013"
 
-        os.mkdir(f"{gtsdb_train}/images")
-        for image in os.listdir(f"{gtsdb_train}/TrainIJCNN2013"):
-            if match_regex(".*([.]ppm)", image):
-                move(f"{gtsdb_train}/TrainIJCNN2013/{image}", f"{gtsdb_train}/images")
+        gt_df = pd.read_csv(f"{gtsdb_train}/TrainIJCNN2013/gt.txt",
+                            sep=";",
+                            names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"]
+                            )
+
+        image_size = (1360, 800)  # (width, height)
+
+        # Normalize Coordinates
+        gt_df["X1.ROI"] /= image_size[0]
+        gt_df["X2.ROI"] /= image_size[0]
+        gt_df["Y1.ROI"] /= image_size[1]
+        gt_df["Y2.ROI"] /= image_size[1]
+
+        # load available image filenames
+        filenames = [image for image in os.listdir(f"{gtsdb_train}/TrainIJCNN2013") if match_regex(".*([.]ppm)", image)]
+        filenames = pd.DataFrame(filenames)
+
+        # create train, val & test splits
+        train, val, test = np.split(filenames.sample(frac=1, random_state=42),
+                                    [int(.6 * len(filenames)), int(.8 * len(filenames))])  # train: 80%, val: 20%, test: 20%
+
+        print(len(train))
+        print(len(val))
+        print(len(test))
+
+        self._prepare_gtsdb_split(train, "train", gt_df)
+        self._prepare_gtsdb_split(val, "val", gt_df)
+        self._prepare_gtsdb_split(test, "test", gt_df)
+
+    def _prepare_gtsdb_split(self, split_df, split_name, gt_df):
+        gtsdb_root = f"{self.__location__}/../../datasets/gtsdb"
+        gtsdb_train = f"{gtsdb_root}/TrainIJCNN2013"
+        gtsdb_test = f"{gtsdb_root}/TestIJCNN2013"
+
+        create_nested_folders(
+            f"{gtsdb_root}/{split_name}/images",
+            f"{gtsdb_root}/{split_name}/labels",
+        )
 
         # convert gtsdb csv Labels to YoloFileFormat
         # YOLO format:
@@ -97,22 +139,13 @@ class YoloV5:
         #   by image width, and y_center and height by image height
         # - Class numbers are zero-indexed (start from 0)
 
-        df = pd.read_csv(f"{gtsdb_train}/TrainIJCNN2013/gt.txt",
-                         sep=";",
-                         names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"]
-                         )
-        image_size = (1360, 800)  # (width, height)
-
-        # Normalize Coordinates
-        df["X1.ROI"] /= image_size[0]
-        df["X2.ROI"] /= image_size[0]
-        df["Y1.ROI"] /= image_size[1]
-        df["Y2.ROI"] /= image_size[1]
-
-        os.mkdir(f"{gtsdb_train}/labels")
-        for image in os.listdir(f"{gtsdb_train}/images"):
-            with open(f"{gtsdb_train}/labels/{image[:-4]}.txt", "w+") as f:
-                image_df = df.loc[df["Filename"] == image]
+        for image in split_df[0]:
+            with Image.open(
+                    f"{gtsdb_train}/TrainIJCNN2013/{image}") as im:  # Yolo can't read images in ppm format
+                im.save(
+                    f"{gtsdb_root}/{split_name}/images/{image[:-4]}.jpg")  # Therefore instead of moving the image, the image is copied and converted simultaneously
+            with open(f"{gtsdb_root}/{split_name}/labels/{image[:-4]}.txt", "w+") as f:
+                image_df = gt_df.loc[gt_df["Filename"] == image]
                 gt_converted = np.array([
                     [
                         row.loc['classID'],
