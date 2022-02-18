@@ -2,7 +2,6 @@ import os
 
 from data.datasets.available_datasets import available_datasets
 
-
 class DatasetLoader:
 
     def __init__(self):
@@ -11,8 +10,14 @@ class DatasetLoader:
 
         self.dataset_apis = {
             "kaggle": self.download_from_kaggle,
-            "cityscapesscripts": self.download_cityscapes
+            "cityscapesscripts": self.download_cityscapes,
+            "road": self.download_road,
         }
+
+    def download_road(self, dataset_properties):
+        from os import system as run_in_terminal
+        run_in_terminal(f"cd {self.__location__}/road-dataset/road/; bash get_dataset.sh")
+        return "road-dataset/road/videos.zip"
 
     def download_cityscapes(self, dataset_properties):
         from os import system as run_in_terminal
@@ -46,6 +51,7 @@ class DatasetLoader:
         z.extractall(self.__location__ + f"/{file_name[:-4]}")
 
     def load_dataset(self, dataset_name):
+        from os import system as run_in_terminal
         if dataset_name not in available_datasets.keys():
             raise ValueError(f"The dataset of name {dataset_name} is unavailable")
 
@@ -58,6 +64,11 @@ class DatasetLoader:
             required_dataset = available_datasets.get(dataset_name).get("required_data")
             if required_dataset != "":
                 self.install_dataset(required_dataset)
+            if dataset_name == 'road':
+                run_in_terminal(f"python {self.__location__}/road-dataset/extract_videos2jpgs.py {self.__location__}/road-dataset/road")
+                from shutil import move
+                move(f"{self.__location__}/road-dataset/road/videos.zip", f"{self.__location__}/road.zip")
+
         return Dataset(dataset_name)
 
 

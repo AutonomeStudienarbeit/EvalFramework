@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+import json
 
 from shutil import move
 from re import match as match_regex
@@ -22,7 +23,8 @@ class YoloV5:
     def prepare_dataset(self, dataset_name):
         dataset_funcs = {
             "gtsrb": self._prepare_gtsrb,
-            "gtsdb": self._prepare_gtsdb
+            "gtsdb": self._prepare_gtsdb,
+            "road": self._prepare_road,
         }
         dataset_funcs.get(dataset_name)()
 
@@ -110,7 +112,8 @@ class YoloV5:
 
         # create train, val & test splits
         train, val, test = np.split(filenames.sample(frac=1, random_state=42),
-                                    [int(.6 * len(filenames)), int(.8 * len(filenames))])  # train: 80%, val: 20%, test: 20%
+                                    [int(.6 * len(filenames)),
+                                     int(.8 * len(filenames))])  # train: 80%, val: 20%, test: 20%
 
         print(len(train))
         print(len(val))
@@ -153,6 +156,85 @@ class YoloV5:
                         (row.loc["Y1.ROI"] + row.loc["Y2.ROI"]) / 2.0,
                         row.loc["X2.ROI"] - row.loc["X1.ROI"],
                         row.loc["Y2.ROI"] - row.loc["Y1.ROI"]
+                    ] for index, row in image_df.iterrows()])
+                lines = [f"{int(entry[0])} {' '.join(map(str, entry[1:]))}" for entry in gt_converted]
+                f.write('\n'.join(lines))
+                f.close()
+
+    def _prepare_road(self):
+        road_root = f"{self.__location__}/../../datasets/road-dataset/road"
+        with open(f"{road_root}/road_trainval_v1.0.json") as f:
+            road_annots = json.load(f)
+
+        frame_annotations = road_annots['db']
+
+        # path, image_width, image_height, xmin, ymin, xmax, ymax, classId
+        frame_annotations_cleaned = []
+        for video in frame_annotations:
+            for frame in frame_annotations[video]['frames']:
+                frame_data = frame_annotations[video]['frames'][frame]
+                if frame_data['annotated']:
+                    for annotation in frame_data['annos']:
+                        object_annotation = frame_data['annos'][annotation]
+                        frame_annotations_cleaned.append(
+                            [
+                                f"{video}/{int(frame):05d}.jpg",
+                                frame_data['width'],
+                                frame_data['height'],
+                                object_annotation['box'][0],
+                                object_annotation['box'][1],
+                                object_annotation['box'][2],
+                                object_annotation['box'][3],
+                                object_annotation['agent_ids'][0]
+                            ]
+                        )
+
+        gt_df = pd.DataFrame(frame_annotations_cleaned,
+                             columns=['path', 'image_width', 'image_height', 'xmin', 'ymin', 'xmax', 'ymax', 'classId'])
+
+        road_all_frames = np.array(
+            [f"{video}/{int(frame):05d}.jpg" for frame in frame_annotations[video]['frames'] for video in
+             frame_annotations])
+        road_all_frames_df = pd.DataFrame(road_all_frames)
+
+        train, val, test = np.split(road_all_frames_df.sample(frac=1, random_state=42),
+                                    [int(.6 * len(road_all_frames_df)),
+                                     int(.8 * len(road_all_frames_df))])  # train: 80%, val: 20%, test: 20%
+
+        self._prepare_road_split(train, "train", gt_df)
+        self._prepare_road_split(val, "val", gt_df)
+        self._prepare_road_split(test, "test", gt_df)
+
+    def _prepare_road_split(self, split_df, split_name, gt_df):
+        road_root = f"{self.__location__}/../../datasets/road-dataset/road"
+        create_nested_folders(
+            f"{road_root}/{split_name}/images",
+            f"{road_root}/{split_name}/labels",
+        )
+
+        # convert gtsdb csv Labels to YoloFileFormat
+        # YOLO format:
+        # one *.txt file per image; The *.txt file specifications are:
+        # - one row per object
+        # - each row is [class x_center y_center width height] format
+        # - Box coordinates must be in normalized xywh format (from 0 - 1). If your boxes are in pixels, divide x_center and width
+        #   by image width, and y_center and height by image height
+        # - Class numbers are zero-indexed (start from 0)
+
+        # ['path', 'image_width', 'image_height', 'xmin', 'ymin', 'xmax', 'ymax', 'classId']
+
+        for image_path in split_df[0]:
+            video, image = image_path.split("/")
+            move(f"{road_root}/rgb-images/{image_path}", f"{road_root}/{split_name}/images/{video}-{image}")
+            with open(f"{road_root}/train/labels/{video}-{image[:-4]}.txt", "w+") as f:
+                image_df = gt_df.loc[gt_df["path"] == image_path]
+                gt_converted = np.array([
+                    [
+                        row.loc['classId'],
+                        (row.loc["xmin"] + row.loc["xmax"]) / 2.0,
+                        (row.loc["ymin"] + row.loc["ymax"]) / 2.0,
+                        row.loc["xmax"] - row.loc["xmin"],
+                        row.loc["ymax"] - row.loc["ymin"]
                     ] for index, row in image_df.iterrows()])
                 lines = [f"{int(entry[0])} {' '.join(map(str, entry[1:]))}" for entry in gt_converted]
                 f.write('\n'.join(lines))

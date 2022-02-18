@@ -36,6 +36,16 @@ class DatasetTests(TestCase):
         self.assertSetEqual(set(gtsdb_dataset.csv_files), {'gt.txt'},
                             "CSV Files of gtsdb.zip not as expected")
 
+    def test_road(self):
+        dataset_loader = DatasetLoader()
+        gtsdb_dataset = dataset_loader.load_dataset("road")
+        self.assertTrue("videos.zip" in listdir(f"{self.datasets_folder}/road-dataset/road/"),
+                        "videos.zip not found!")
+        self.assertTrue("videos" in listdir(f"{self.datasets_folder}/road-dataset/road/"),
+                            "videos folder missing")
+        self.assertTrue("road_trainval_v1.0.json" in listdir(f"{self.datasets_folder}/road-dataset/road/"),
+                            "road annotation file missing")
+
 
     # def test_cityscapes_fine(self):
     #     # if "cityscapes-fine.zip" in listdir(self.datasets_folder):

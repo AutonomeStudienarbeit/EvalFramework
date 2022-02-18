@@ -15,6 +15,14 @@ available_datasets = {
         "required_data": "",
         "version": ""
     },
+    "road": {
+        "description": "The ROad event Awareness Dataset for Autonomous Driving ",
+        "url": "https://sites.google.com/view/roadchallangeiccv2021/dataset?authuser=0",
+        "download_url": "https://docs.google.com/uc?export=download&id=1YQ9ap3o9pqbD0Pyei68rlaMDcRpUn-qz",
+        "download_api": "road",
+        "required_data": "",
+        "version": ""
+    },
     "Cityscapes-Fine": {
         "description": "Cityscapes dataset with fine annotations",
         "url": "https://www.cityscapes-dataset.com/",
