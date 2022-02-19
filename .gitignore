@@ -6,3 +6,4 @@ venv
 **/gtsdb
 /data/datasets/road-dataset/road/rgb-images/
 /data/datasets/road-dataset/road/videos/
+/data/datasets/road/

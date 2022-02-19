@@ -39,12 +39,14 @@ class DatasetTests(TestCase):
     def test_road(self):
         dataset_loader = DatasetLoader()
         gtsdb_dataset = dataset_loader.load_dataset("road")
-        self.assertTrue("videos.zip" in listdir(f"{self.datasets_folder}/road-dataset/road/"),
-                        "videos.zip not found!")
-        self.assertTrue("videos" in listdir(f"{self.datasets_folder}/road-dataset/road/"),
+        self.assertTrue("road.zip" in listdir(f"{self.datasets_folder}"),
+                        "road.zip not found!")
+        self.assertTrue("videos" in listdir(f"{self.datasets_folder}/road/"),
                             "videos folder missing")
-        self.assertTrue("road_trainval_v1.0.json" in listdir(f"{self.datasets_folder}/road-dataset/road/"),
+        self.assertTrue("road_trainval_v1.0.json" in listdir(f"{self.datasets_folder}/road/"),
                             "road annotation file missing")
+        self.assertTrue("rgb-images" in listdir(f"{self.datasets_folder}/road/"),
+                        "videos folder missing")
 
 
     # def test_cityscapes_fine(self):

@@ -162,7 +162,7 @@ class YoloV5:
                 f.close()
 
     def _prepare_road(self):
-        road_root = f"{self.__location__}/../../datasets/road-dataset/road"
+        road_root = f"{self.__location__}/../../datasets/road"
         with open(f"{road_root}/road_trainval_v1.0.json") as f:
             road_annots = json.load(f)
 
@@ -206,7 +206,7 @@ class YoloV5:
         self._prepare_road_split(test, "test", gt_df)
 
     def _prepare_road_split(self, split_df, split_name, gt_df):
-        road_root = f"{self.__location__}/../../datasets/road-dataset/road"
+        road_root = f"{self.__location__}/../../datasets/road"
         create_nested_folders(
             f"{road_root}/{split_name}/images",
             f"{road_root}/{split_name}/labels",
