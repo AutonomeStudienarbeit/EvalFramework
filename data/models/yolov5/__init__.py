@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import json
 
-from shutil import move
+from shutil import move, copy2
 from re import match as match_regex
 from PIL import Image
 from pathlib import Path
@@ -192,9 +192,11 @@ class YoloV5:
         gt_df = pd.DataFrame(frame_annotations_cleaned,
                              columns=['path', 'image_width', 'image_height', 'xmin', 'ymin', 'xmax', 'ymax', 'classId'])
 
-        road_all_frames = np.array(
-            [f"{video}/{int(frame):05d}.jpg" for frame in frame_annotations[video]['frames'] for video in
-             frame_annotations])
+        road_all_frames = []
+        for video in frame_annotations:
+            road_all_frames += [f"{video}/{int(frame):05d}.jpg" for frame in frame_annotations[video]['frames']]
+
+        road_all_frames = np.array(road_all_frames)
         road_all_frames_df = pd.DataFrame(road_all_frames)
 
         train, val, test = np.split(road_all_frames_df.sample(frac=1, random_state=42),
@@ -225,8 +227,8 @@ class YoloV5:
 
         for image_path in split_df[0]:
             video, image = image_path.split("/")
-            move(f"{road_root}/rgb-images/{image_path}", f"{road_root}/{split_name}/images/{video}-{image}")
-            with open(f"{road_root}/train/labels/{video}-{image[:-4]}.txt", "w+") as f:
+            copy2(f"{road_root}/rgb-images/{image_path}", f"{road_root}/{split_name}/images/{video}-{image}")
+            with open(f"{road_root}/{split_name}/labels/{video}-{image[:-4]}.txt", "w+") as f:
                 image_df = gt_df.loc[gt_df["path"] == image_path]
                 gt_converted = np.array([
                     [

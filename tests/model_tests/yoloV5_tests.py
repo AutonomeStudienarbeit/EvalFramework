@@ -70,22 +70,22 @@ class YoloV5Tests(TestCase):
         yolov5 = YoloV5()
         yolov5.prepare_dataset("road")
         self.assertEqual(
-            64810,
-            len(os.listdir(f"{self.datasets_folder}/road-dataset/road/train/images/")),
+            61144,
+            len(os.listdir(f"{self.datasets_folder}/road/train/images/")),
             "Length of train images folder does not match"
         )
         self.assertEqual(
-            64810,
-            len(os.listdir(f"{self.datasets_folder}/road-dataset/road/train/labels/")),
+            61144,
+            len(os.listdir(f"{self.datasets_folder}/road/train/labels/")),
             "Length of train labels folder does not match"
         )
         self.assertEqual(
-            21604,
-            len(os.listdir(f"{self.datasets_folder}/road-dataset/road/test/images/")),
+            20381,
+            len(os.listdir(f"{self.datasets_folder}/road/test/images/")),
             "Length of test images folder does not match"
         )
         self.assertEqual(
-            21604,
-            len(os.listdir(f"{self.datasets_folder}/road-dataset/road/test/labels/")),
+            20381,
+            len(os.listdir(f"{self.datasets_folder}/road/test/labels/")),
             "Length of test labels folder does not match"
         )
