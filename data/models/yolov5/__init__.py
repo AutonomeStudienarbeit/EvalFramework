@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import json
+import multiprocessing as mp
 
 from shutil import move, copy2
 from re import match as match_regex
@@ -34,19 +35,19 @@ class YoloV5:
         gtsrb_train = gtsrb_root + "Train/"
         gtsrb_test = gtsrb_root + "Test/"
 
-        os.mkdir(f"{gtsrb_train}images/")
+        create_nested_folders(f"{gtsrb_train}yolo/images/")
         for folder in os.listdir(gtsrb_train):
             if folder == "images":
                 continue
             for image in os.listdir(f"{gtsrb_train}{folder}/"):
-                move(f"{gtsrb_train}{folder}/{image}", f"{gtsrb_train}images/")
+                move(f"{gtsrb_train}{folder}/{image}", f"{gtsrb_train}yolo/images/")
             os.rmdir(f"{gtsrb_train}{folder}")
 
-        os.mkdir(f"{gtsrb_test}images/")
+        create_nested_folders(f"{gtsrb_test}/yolo/images/")
         for image in os.listdir(gtsrb_test):
             if image == "images":
                 continue
-            move(f"{gtsrb_test}{image}", f"{gtsrb_test}images/")
+            move(f"{gtsrb_test}{image}", f"{gtsrb_test}yolo/images/")
 
         # convert gtsrb csv Labels to YoloFileFormat
         # YOLO format:
@@ -57,8 +58,8 @@ class YoloV5:
         #   by image width, and y_center and height by image height
         # - Class numbers are zero-indexed (start from 0)
 
-        os.mkdir(f"{gtsrb_train}labels/")
-        os.mkdir(f"{gtsrb_test}labels/")
+        create_nested_folders(f"{gtsrb_train}yolo/labels/")
+        create_nested_folders(f"{gtsrb_test}yolo/labels/")
 
         # [train_df, test_df]
         dfs = [pd.read_csv(f"{gtsrb_root}Train.csv"), pd.read_csv(f"{gtsrb_root}Test.csv")]
@@ -85,7 +86,7 @@ class YoloV5:
                 ])
 
                 # write to label file
-                with open(f"{gtsrb_root}{current_subset_id}/labels/{current_image[:-4]}.txt", "w+") as f:
+                with open(f"{gtsrb_root}{current_subset_id}/yolo/labels/{current_image[:-4]}.txt", "w+") as f:
                     f.write(f"{int(converted[0])} {' '.join(map(str, converted[1:]))}")
 
     def _prepare_gtsdb(self):
@@ -146,8 +147,8 @@ class YoloV5:
             with Image.open(
                     f"{gtsdb_train}/TrainIJCNN2013/{image}") as im:  # Yolo can't read images in ppm format
                 im.save(
-                    f"{gtsdb_root}/{split_name}/images/{image[:-4]}.jpg")  # Therefore instead of moving the image, the image is copied and converted simultaneously
-            with open(f"{gtsdb_root}/{split_name}/labels/{image[:-4]}.txt", "w+") as f:
+                    f"{gtsdb_root}/yolo/{split_name}/images/{image[:-4]}.jpg")  # Therefore instead of moving the image, the image is copied and converted simultaneously
+            with open(f"{gtsdb_root}/yolo/{split_name}/labels/{image[:-4]}.txt", "w+") as f:
                 image_df = gt_df.loc[gt_df["Filename"] == image]
                 gt_converted = np.array([
                     [
@@ -203,16 +204,49 @@ class YoloV5:
                                     [int(.6 * len(road_all_frames_df)),
                                      int(.8 * len(road_all_frames_df))])  # train: 80%, val: 20%, test: 20%
 
-        self._prepare_road_split(train, "train", gt_df)
-        self._prepare_road_split(val, "val", gt_df)
-        self._prepare_road_split(test, "test", gt_df)
+        self.mp_prepare_road(gt_df, (train, "train"), (val, "val"), (test, "test"))
 
-    def _prepare_road_split(self, split_df, split_name, gt_df):
+    def mp_prepare_road(self, gt_df, *splits):
+        thread_count = mp.cpu_count()
         road_root = f"{self.__location__}/../../datasets/road"
-        create_nested_folders(
-            f"{road_root}/{split_name}/images",
-            f"{road_root}/{split_name}/labels",
-        )
+
+        for split_tuple in splits:
+
+            split_name = split_tuple[1]
+            split_df = split_tuple[0]
+
+            create_nested_folders(
+                f"{road_root}/yolo/{split_name}/images",
+                f"{road_root}/yolo/{split_name}/labels",
+            )
+
+            split_frame_count = split_tuple[0].shape[0]
+            thread_range = split_frame_count // thread_count
+
+            split_df.reset_index(drop=True, inplace=True)
+
+            processes = []
+            for i in range(thread_count):
+                if i == thread_count - 1:
+                    split_subset_to_be_processed = split_df.iloc[i * thread_range:, :]
+                else:
+                    split_subset_to_be_processed = split_df.iloc[i * thread_range:(i + 1) * thread_range - 1, :]
+                print(f"Process {i}, number of elements: {split_subset_to_be_processed.shape[0]}")
+                processes.append(
+                    mp.Process(
+                        target=self._prepare_road_split_mp_kernel,
+                        args=(split_subset_to_be_processed, split_name, gt_df)
+                    )
+                )
+
+            for p in processes:
+                p.start()
+
+            for p in processes:
+                p.join()
+
+    def _prepare_road_split_mp_kernel(self, split_df, split_name, gt_df):
+        road_root = f"{self.__location__}/../../datasets/road"
 
         # convert gtsdb csv Labels to YoloFileFormat
         # YOLO format:
@@ -227,8 +261,8 @@ class YoloV5:
 
         for image_path in split_df[0]:
             video, image = image_path.split("/")
-            copy2(f"{road_root}/rgb-images/{image_path}", f"{road_root}/{split_name}/images/{video}-{image}")
-            with open(f"{road_root}/{split_name}/labels/{video}-{image[:-4]}.txt", "w+") as f:
+            copy2(f"{road_root}/rgb-images/{image_path}", f"{road_root}/yolo/{split_name}/images/{video}-{image}")
+            with open(f"{road_root}/yolo/{split_name}/labels/{video}-{image[:-4]}.txt", "w+") as f:
                 image_df = gt_df.loc[gt_df["path"] == image_path]
                 gt_converted = np.array([
                     [
