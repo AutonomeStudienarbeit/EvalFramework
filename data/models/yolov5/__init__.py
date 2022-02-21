@@ -130,8 +130,8 @@ class YoloV5:
         gtsdb_test = f"{gtsdb_root}/TestIJCNN2013"
 
         create_nested_folders(
-            f"{gtsdb_root}/{split_name}/images",
-            f"{gtsdb_root}/{split_name}/labels",
+            f"{gtsdb_root}/yolo/{split_name}/images",
+            f"{gtsdb_root}/yolo/{split_name}/labels",
         )
 
         # convert gtsdb csv Labels to YoloFileFormat
