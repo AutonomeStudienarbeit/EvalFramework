@@ -40,14 +40,13 @@ class YoloV5:
             if folder == "yolo":
                 continue
             for image in os.listdir(f"{gtsrb_train}{folder}/"):
-                move(f"{gtsrb_train}{folder}/{image}", f"{gtsrb_train}yolo/images/")
-            os.rmdir(f"{gtsrb_train}{folder}")
+                copy2(f"{gtsrb_train}{folder}/{image}", f"{gtsrb_train}yolo/images/")
 
         create_nested_folders(f"{gtsrb_test}/yolo/images/")
         for image in os.listdir(gtsrb_test):
-            if image == "images":
+            if image == "yolo":
                 continue
-            move(f"{gtsrb_test}{image}", f"{gtsrb_test}yolo/images/")
+            copy2(f"{gtsrb_test}{image}", f"{gtsrb_test}yolo/images/")
 
         # convert gtsrb csv Labels to YoloFileFormat
         # YOLO format:
