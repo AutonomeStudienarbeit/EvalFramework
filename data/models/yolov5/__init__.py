@@ -37,7 +37,7 @@ class YoloV5:
 
         create_nested_folders(f"{gtsrb_train}yolo/images/")
         for folder in os.listdir(gtsrb_train):
-            if folder == "images":
+            if folder == "yolo":
                 continue
             for image in os.listdir(f"{gtsrb_train}{folder}/"):
                 move(f"{gtsrb_train}{folder}/{image}", f"{gtsrb_train}yolo/images/")
