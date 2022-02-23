@@ -268,8 +268,8 @@ class YoloV5:
                         row.loc['classId'],
                         (row.loc["xmin"] + row.loc["xmax"]) / 2.0,
                         (row.loc["ymin"] + row.loc["ymax"]) / 2.0,
-                        row.loc["xmax"] - row.loc["xmin"],
-                        row.loc["ymax"] - row.loc["ymin"]
+                        row.loc["xmax"] - row.loc["xmin"] if row.loc["xmax"] - row.loc["xmin"] < 1.0 else 1.0,
+                        row.loc["ymax"] - row.loc["ymin"] if row.loc["ymax"] - row.loc["ymin"] < 1.0 else 1.0
                     ] for index, row in image_df.iterrows()])
                 lines = [f"{int(entry[0])} {' '.join(map(str, entry[1:]))}" for entry in gt_converted]
                 f.write('\n'.join(lines))
