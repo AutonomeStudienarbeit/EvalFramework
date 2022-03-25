@@ -5,6 +5,7 @@ available_datasets = {
         "download_url": "meowmeowmeowmeowmeow/gtsrb-german-traffic-sign",
         "download_api": "kaggle",
         "required_data": "",
+        "annotated_test": True,
         "version": ""
     },
     "GTSDB": {
@@ -13,6 +14,7 @@ available_datasets = {
         "download_url": "safabouguezzi/german-traffic-sign-detection-benchmark-gtsdb",
         "download_api": "kaggle",
         "required_data": "",
+        "annotated_test": True,
         "version": ""
     }
 }

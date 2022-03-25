@@ -25,7 +25,6 @@ class YoloV5:
         dataset_funcs = {
             "gtsrb": self._prepare_gtsrb,
             "gtsdb": self._prepare_gtsdb,
-            "road": self._prepare_road,
         }
         dataset_funcs.get(dataset_name)()
 
@@ -156,120 +155,6 @@ class YoloV5:
                         (row.loc["Y1.ROI"] + row.loc["Y2.ROI"]) / 2.0,
                         row.loc["X2.ROI"] - row.loc["X1.ROI"],
                         row.loc["Y2.ROI"] - row.loc["Y1.ROI"]
-                    ] for index, row in image_df.iterrows()])
-                lines = [f"{int(entry[0])} {' '.join(map(str, entry[1:]))}" for entry in gt_converted]
-                f.write('\n'.join(lines))
-                f.close()
-
-    def _prepare_road(self):
-        road_root = f"{self.__location__}/../../datasets/road"
-        with open(f"{road_root}/road_trainval_v1.0.json") as f:
-            road_annots = json.load(f)
-
-        frame_annotations = road_annots['db']
-
-        # path, image_width, image_height, xmin, ymin, xmax, ymax, classId
-        frame_annotations_cleaned = []
-        for video in frame_annotations:
-            for frame in frame_annotations[video]['frames']:
-                frame_data = frame_annotations[video]['frames'][frame]
-                if frame_data['annotated']:
-                    for annotation in frame_data['annos']:
-                        object_annotation = frame_data['annos'][annotation]
-                        frame_annotations_cleaned.append(
-                            [
-                                f"{video}/{int(frame):05d}.jpg",
-                                frame_data['width'],
-                                frame_data['height'],
-                                object_annotation['box'][0],
-                                object_annotation['box'][1],
-                                object_annotation['box'][2],
-                                object_annotation['box'][3],
-                                object_annotation['agent_ids'][0]
-                            ]
-                        )
-
-        gt_df = pd.DataFrame(frame_annotations_cleaned,
-                             columns=['path', 'image_width', 'image_height', 'xmin', 'ymin', 'xmax', 'ymax', 'classId'])
-
-        road_all_frames = []
-        for video in frame_annotations:
-            road_all_frames += [f"{video}/{int(frame):05d}.jpg" for frame in frame_annotations[video]['frames']]
-
-        road_all_frames = np.array(road_all_frames)
-        road_all_frames_df = pd.DataFrame(road_all_frames)
-
-        train, val, test = np.split(road_all_frames_df.sample(frac=1, random_state=42),
-                                    [int(.6 * len(road_all_frames_df)),
-                                     int(.8 * len(road_all_frames_df))])  # train: 80%, val: 20%, test: 20%
-
-        self.mp_prepare_road(gt_df, (train, "train"), (val, "val"), (test, "test"))
-
-    def mp_prepare_road(self, gt_df, *splits):
-        thread_count = mp.cpu_count()
-        road_root = f"{self.__location__}/../../datasets/road"
-
-        for split_tuple in splits:
-
-            split_name = split_tuple[1]
-            split_df = split_tuple[0]
-
-            create_nested_folders(
-                f"{road_root}/yolo/{split_name}/images",
-                f"{road_root}/yolo/{split_name}/labels",
-            )
-
-            split_frame_count = split_tuple[0].shape[0]
-            thread_range = split_frame_count // thread_count
-
-            split_df.reset_index(drop=True, inplace=True)
-
-            processes = []
-            for i in range(thread_count):
-                if i == thread_count - 1:
-                    split_subset_to_be_processed = split_df.iloc[i * thread_range:, :]
-                else:
-                    split_subset_to_be_processed = split_df.iloc[i * thread_range:(i + 1) * thread_range - 1, :]
-                print(f"Process {i}, number of elements: {split_subset_to_be_processed.shape[0]}")
-                processes.append(
-                    mp.Process(
-                        target=self._prepare_road_split_mp_kernel,
-                        args=(split_subset_to_be_processed, split_name, gt_df)
-                    )
-                )
-
-            for p in processes:
-                p.start()
-
-            for p in processes:
-                p.join()
-
-    def _prepare_road_split_mp_kernel(self, split_df, split_name, gt_df):
-        road_root = f"{self.__location__}/../../datasets/road"
-
-        # convert gtsdb csv Labels to YoloFileFormat
-        # YOLO format:
-        # one *.txt file per image; The *.txt file specifications are:
-        # - one row per object
-        # - each row is [class x_center y_center width height] format
-        # - Box coordinates must be in normalized xywh format (from 0 - 1). If your boxes are in pixels, divide x_center and width
-        #   by image width, and y_center and height by image height
-        # - Class numbers are zero-indexed (start from 0)
-
-        # ['path', 'image_width', 'image_height', 'xmin', 'ymin', 'xmax', 'ymax', 'classId']
-
-        for image_path in split_df[0]:
-            video, image = image_path.split("/")
-            copy2(f"{road_root}/rgb-images/{image_path}", f"{road_root}/yolo/{split_name}/images/{video}-{image}")
-            with open(f"{road_root}/yolo/{split_name}/labels/{video}-{image[:-4]}.txt", "w+") as f:
-                image_df = gt_df.loc[gt_df["path"] == image_path]
-                gt_converted = np.array([
-                    [
-                        row.loc['classId'],
-                        (row.loc["xmin"] + row.loc["xmax"]) / 2.0,
-                        (row.loc["ymin"] + row.loc["ymax"]) / 2.0,
-                        row.loc["xmax"] - row.loc["xmin"] if row.loc["xmax"] - row.loc["xmin"] < 1.0 else 1.0,
-                        row.loc["ymax"] - row.loc["ymin"] if row.loc["ymax"] - row.loc["ymin"] < 1.0 else 1.0
                     ] for index, row in image_df.iterrows()])
                 lines = [f"{int(entry[0])} {' '.join(map(str, entry[1:]))}" for entry in gt_converted]
                 f.write('\n'.join(lines))
