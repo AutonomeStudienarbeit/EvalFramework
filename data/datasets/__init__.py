@@ -2,6 +2,7 @@ import os
 
 from data.datasets.available_datasets import available_datasets
 
+
 class DatasetLoader:
 
     def __init__(self):
@@ -10,20 +11,7 @@ class DatasetLoader:
 
         self.dataset_apis = {
             "kaggle": self.download_from_kaggle,
-            "cityscapesscripts": self.download_cityscapes,
-            "road": self.download_road,
         }
-
-    def download_road(self, dataset_properties):
-        from os import system as run_in_terminal
-        run_in_terminal(f"cd {self.__location__}/road-dataset/road/ && bash get_dataset.sh")
-        return "road-dataset/road/videos.zip"
-
-    def download_cityscapes(self, dataset_properties):
-        from os import system as run_in_terminal
-        cs_package_id = dataset_properties.get("download_url")
-        run_in_terminal("cd " + self.__location__ + "; " + "csDownload " + cs_package_id)
-        return cs_package_id
 
     def download_from_kaggle(self, dataset_properties):
         from kaggle.api.kaggle_api_extended import KaggleApi
@@ -64,8 +52,6 @@ class DatasetLoader:
             required_dataset = available_datasets.get(dataset_name).get("required_data")
             if required_dataset != "":
                 self.install_dataset(required_dataset)
-            if dataset_name == 'road':
-                run_in_terminal(f"python {self.__location__}/road-dataset/extract_videos2jpgs.py {self.__location__}/road")
 
         return Dataset(dataset_name)
 
