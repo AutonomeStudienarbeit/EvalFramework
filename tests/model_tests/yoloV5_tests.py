@@ -1,14 +1,18 @@
 import os
 from unittest import TestCase
 from os import path, getcwd, listdir
+
+from data.datasets import DatasetLoader
 from data.models.yolov5 import YoloV5
 
 class YoloV5Tests(TestCase):
     datasets_folder = path.realpath(getcwd() + "/../../data/datasets/")
 
     def test_gtsrb_dataset_prep(self):
+        dataset_loader = DatasetLoader()
+        gtsrb_dataset = dataset_loader.load_dataset("GTSRB")
         yolov5 = YoloV5()
-        yolov5.prepare_dataset("gtsrb")
+        yolov5.prepare_dataset(gtsrb_dataset)
         self.assertEqual(
             39209,
             len(os.listdir(f"{self.datasets_folder}/gtsrb/Train/yolo/images/")),
@@ -31,8 +35,10 @@ class YoloV5Tests(TestCase):
         )
 
     def test_gtsdb_dataset_prep(self):
+        dataset_loader = DatasetLoader()
+        gtsdb_dataset = dataset_loader.load_dataset("GTSDB")
         yoloV5 = YoloV5()
-        yoloV5.prepare_dataset('gtsdb')
+        yoloV5.prepare_dataset(gtsdb_dataset)
         train_image_folder_content = os.listdir(f"{self.datasets_folder}/gtsdb/yolo/train/images/")
         self.assertEqual(
             360,
@@ -64,28 +70,4 @@ class YoloV5Tests(TestCase):
             120,
             len(os.listdir(f"{self.datasets_folder}/gtsdb/yolo/val/labels/")),
             "Length of val labels folder does not match"
-        )
-
-    def test_road_dataset_prep(self):
-        yolov5 = YoloV5()
-        yolov5.prepare_dataset("road")
-        self.assertEqual(
-            61129,
-            len(os.listdir(f"{self.datasets_folder}/road/yolo/train/images/")),
-            "Length of train images folder does not match"
-        )
-        self.assertEqual(
-            61129,
-            len(os.listdir(f"{self.datasets_folder}/road/yolo/train/labels/")),
-            "Length of train labels folder does not match"
-        )
-        self.assertEqual(
-            20367,
-            len(os.listdir(f"{self.datasets_folder}/road/yolo/test/images/")),
-            "Length of test images folder does not match"
-        )
-        self.assertEqual(
-            20367,
-            len(os.listdir(f"{self.datasets_folder}/road/yolo/test/labels/")),
-            "Length of test labels folder does not match"
         )

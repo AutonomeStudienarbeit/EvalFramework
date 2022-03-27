@@ -21,18 +21,18 @@ class YoloV5:
     def __init__(self):
         self.__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-    def prepare_dataset(self, dataset_name):
+    def prepare_dataset(self, dataset):
         dataset_funcs = {
-            "gtsrb": self._prepare_gtsrb,
-            "gtsdb": self._prepare_gtsdb,
+            "GTSRB": self._prepare_gtsrb,
+            "GTSDB": self._prepare_gtsdb,
         }
-        dataset_funcs.get(dataset_name)()
+        dataset_funcs.get(dataset.dataset_id)(dataset)
 
-    def _prepare_gtsrb(self):
+    def _prepare_gtsrb(self, dataset):
         # collect gtsrb file paths in txt file, so that yolo can read the dataset
-        gtsrb_root = self.__location__ + "/../../datasets/gtsrb/"
-        gtsrb_train = gtsrb_root + "Train/"
-        gtsrb_test = gtsrb_root + "Test/"
+        gtsrb_root = dataset.path
+        gtsrb_train = gtsrb_root + "/Train/"
+        gtsrb_test = gtsrb_root + "/Test/"
 
         create_nested_folders(f"{gtsrb_train}yolo/images/")
         for folder in os.listdir(gtsrb_train):
@@ -60,7 +60,7 @@ class YoloV5:
         create_nested_folders(f"{gtsrb_test}yolo/labels/")
 
         # [train_df, test_df]
-        dfs = [pd.read_csv(f"{gtsrb_root}Train.csv"), pd.read_csv(f"{gtsrb_root}Test.csv")]
+        dfs = [pd.read_csv(f"{gtsrb_root}/Train.csv"), pd.read_csv(f"{gtsrb_root}/Test.csv")]
         for subset_df in dfs:
             # Normalize Coordinates
             subset_df["Roi.X1"] /= subset_df["Width"]
@@ -84,15 +84,14 @@ class YoloV5:
                 ])
 
                 # write to label file
-                with open(f"{gtsrb_root}{current_subset_id}/yolo/labels/{current_image[:-4]}.txt", "w+") as f:
+                with open(f"{gtsrb_root}/{current_subset_id}/yolo/labels/{current_image[:-4]}.txt", "w+") as f:
                     f.write(f"{int(converted[0])} {' '.join(map(str, converted[1:]))}")
 
-    def _prepare_gtsdb(self):
-        gtsdb_root = f"{self.__location__}/../../datasets/gtsdb"
-        gtsdb_train = f"{gtsdb_root}/TrainIJCNN2013"
-        gtsdb_test = f"{gtsdb_root}/TestIJCNN2013"
+    # TODO: remove split generation
+    def _prepare_gtsdb(self, dataset):
+        gtsdb_root = dataset.path
 
-        gt_df = pd.read_csv(f"{gtsdb_train}/TrainIJCNN2013/gt.txt",
+        gt_df = pd.read_csv(f"{gtsdb_root}/{dataset.train_ground_truth}",
                             sep=";",
                             names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"]
                             )
@@ -105,27 +104,21 @@ class YoloV5:
         gt_df["Y1.ROI"] /= image_size[1]
         gt_df["Y2.ROI"] /= image_size[1]
 
-        # load available image filenames
-        filenames = [image for image in os.listdir(f"{gtsdb_train}/TrainIJCNN2013") if match_regex(".*([.]ppm)", image)]
-        filenames = pd.DataFrame(filenames)
-
-        # create train, val & test splits
-        train, val, test = np.split(filenames.sample(frac=1, random_state=42),
-                                    [int(.6 * len(filenames)),
-                                     int(.8 * len(filenames))])  # train: 80%, val: 20%, test: 20%
+        train = dataset.load_train_subset()
+        val = dataset.load_validation_subset()
+        test = dataset.load_test_subset()
 
         print(len(train))
         print(len(val))
         print(len(test))
 
-        self._prepare_gtsdb_split(train, "train", gt_df)
-        self._prepare_gtsdb_split(val, "val", gt_df)
-        self._prepare_gtsdb_split(test, "test", gt_df)
+        self._prepare_gtsdb_split(train, "train", gt_df, dataset)
+        self._prepare_gtsdb_split(val, "val", gt_df, dataset)
+        self._prepare_gtsdb_split(test, "test", gt_df, dataset)
 
-    def _prepare_gtsdb_split(self, split_df, split_name, gt_df):
-        gtsdb_root = f"{self.__location__}/../../datasets/gtsdb"
+    def _prepare_gtsdb_split(self, split_df, split_name, gt_df, dataset):
+        gtsdb_root = dataset.path
         gtsdb_train = f"{gtsdb_root}/TrainIJCNN2013"
-        gtsdb_test = f"{gtsdb_root}/TestIJCNN2013"
 
         create_nested_folders(
             f"{gtsdb_root}/yolo/{split_name}/images",

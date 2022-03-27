@@ -6,6 +6,12 @@ available_datasets = {
         "download_api": "kaggle",
         "required_data": "",
         "annotated_test": True,
+        "gt_train_path": "Train.csv",
+        "gt_test_path": "Test.csv",
+        "train_folder_path": "Train",
+        "test_folder_path": "Test",
+        "val_folder_path": None,
+        "image_format": "png",
         "version": ""
     },
     "GTSDB": {
@@ -14,7 +20,13 @@ available_datasets = {
         "download_url": "safabouguezzi/german-traffic-sign-detection-benchmark-gtsdb",
         "download_api": "kaggle",
         "required_data": "",
-        "annotated_test": True,
+        "annotated_test": False,
+        "gt_train_path": "TrainIJCNN2013/TrainIJCNN2013/gt.txt",
+        "gt_test_path": None,
+        "train_folder_path": "TrainIJCNN2013/TrainIJCNN2013",
+        "test_folder_path": None,
+        "val_folder_path": None,
+        "image_format": "ppm",
         "version": ""
     }
 }

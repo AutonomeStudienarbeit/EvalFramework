@@ -14,24 +14,20 @@ class DatasetTests(TestCase):
         gtsrb_dataset = dataset_loader.load_dataset("GTSRB")
         self.assertTrue("gtsrb.zip" in listdir(self.datasets_folder),
                         "gtsrb.zip not found!")
-        self.assertSetEqual(set(gtsrb_dataset.folders), {'Test', 'test', 'train', 'Train', 'Meta', 'meta'},
-                            "Folder Structure of gtsrb.zip not as expected!")
-        self.assertSetEqual(set(gtsrb_dataset.csv_files), {'Train.csv', 'Meta.csv', 'Test.csv'},
-                            "CSV Files of gtsrb.zip not as expected")
         train_subset = gtsrb_dataset.load_train_subset()
         self.assertGreater(len(train_subset), 0, "Length of train subset is not greater than 0")
         test_subset = gtsrb_dataset.load_test_subset()
         self.assertGreater(len(test_subset), 0, "Length of test subset is not greater than 0")
 
     def test_gtsdb(self):
-        if "gtsdb.zip" in listdir(self.datasets_folder):
-            remove(self.datasets_folder + "/gtsdb.zip")
+        # if "gtsdb.zip" in listdir(self.datasets_folder):
+        #     remove(self.datasets_folder + "/gtsdb.zip")
 
         dataset_loader = DatasetLoader()
         gtsdb_dataset = dataset_loader.load_dataset("GTSDB")
         self.assertTrue("gtsdb.zip" in listdir(self.datasets_folder),
                         "gtsdb.zip not found!")
-        self.assertSetEqual(set(gtsdb_dataset.folders), {'TestIJCNN2013', 'TrainIJCNN2013'},
-                            "Folder Structure of gtsdb.zip not as expected!")
-        self.assertSetEqual(set(gtsdb_dataset.csv_files), {'gt.txt'},
-                            "CSV Files of gtsdb.zip not as expected")
+        train, val, test = gtsdb_dataset.load_train_subset(), gtsdb_dataset.load_validation_subset(), gtsdb_dataset.load_test_subset()
+        self.assertEqual(360, len(train), "Length of train subset does not match")
+        self.assertEqual(120, len(val), "Length of val subset does not match")
+        self.assertEqual(120, len(test), "Length of test subset does not match")
