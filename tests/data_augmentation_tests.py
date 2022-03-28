@@ -13,3 +13,9 @@ class DataAugmentationTests(TestCase):
         gtsdb_dataset = dataset_loader.load_dataset("GTSDB")
         data_augmentation = DataAugmentation(dataset=gtsdb_dataset, subset_to_be_perturbed="test")
         data_augmentation.blur_set(radius=4, frac=0.5)
+
+    def test_gaussian_noise(self):
+        dataset_loader = DatasetLoader()
+        gtsdb_dataset = dataset_loader.load_dataset("GTSDB")
+        data_augmentation = DataAugmentation(dataset=gtsdb_dataset, subset_to_be_perturbed="test")
+        data_augmentation.perturb_gaussian_noise(frac=0.5)

@@ -1,4 +1,6 @@
 import utils
+import numpy as np
+import cv2
 
 
 class DataAugmentation:
@@ -24,4 +26,16 @@ class DataAugmentation:
             with Image.open(image) as pil_image:
                 pil_image = pil_image.filter(ImageFilter.GaussianBlur(radius=radius))
                 pil_image.save(f"{folder_path}/{image.split('/')[-1][:-4]}.png")
+
+    def perturb_gaussian_noise(self, frac):
+        folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/gaussian_noise"
+        utils.create_nested_folders(folder_path)
+
+        subset_fraction = self.subset.sample(frac=frac)
+        for image in subset_fraction[0]:
+            cv_image = cv2.imread(image)
+            gaussian = np.random.normal(0, 1, cv_image.size)
+            gaussian = gaussian.reshape(cv_image.shape[0], cv_image.shape[1], cv_image.shape[2]).astype('uint8')
+            perturbed_image = cv2.add(cv_image, gaussian)
+            cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", perturbed_image)
 

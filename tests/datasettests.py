@@ -1,6 +1,6 @@
 from data.datasets import DatasetLoader
 from unittest import TestCase
-from os import listdir, getcwd, path, remove
+from os import listdir, getcwd, path
 
 
 class DatasetTests(TestCase):
