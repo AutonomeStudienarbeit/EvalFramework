@@ -89,11 +89,13 @@ class DataAugmentation:
             end_pixel = draw_pixel(drawn_pixels, row, col)
             # check if end_pixel out of range or in front of start_pixel
             if not end_pixel[0] > start_pixel[0]:
-                diff = start_pixel[0] - end_pixel[0]
-                end_pixel = (start_pixel[0] + diff, end_pixel[0])
+                tmp = end_pixel[0]
+                end_pixel = (start_pixel[0], end_pixel[1])
+                start_pixel = (tmp, start_pixel[1])
             if not end_pixel[1] > start_pixel[1]:
-                diff = start_pixel[1] - end_pixel[1]
-                end_pixel = (end_pixel[0], start_pixel[1] + diff)
+                tmp = end_pixel[1]
+                end_pixel = (end_pixel[0], start_pixel[1])
+                start_pixel = (start_pixel[0], tmp)
             if end_pixel[0] >= cv_image.shape[0]:
                 end_pixel = (cv_image.shape[0] - 1, end_pixel[1])
             if end_pixel[1] >= cv_image.shape[0]:
@@ -102,7 +104,6 @@ class DataAugmentation:
             rectangle = np.full((end_pixel[0]-start_pixel[0], end_pixel[1]-start_pixel[1], 3), color)
             cv_image[start_pixel[0]:end_pixel[0], start_pixel[1]:end_pixel[1]] = rectangle
 
-            # cv2.rectangle(cv_image, start_pixel, end_pixel, color=color, thickness=-1)
             cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
             # print(f"Perturbed image {image.split('/')[-1][:-4]}, pixels: start{start_pixel}, end{end_pixel}")
         # print(f"Perturbed {len(subset_fraction[0])} images and got {edgeCase} edgeCases")
