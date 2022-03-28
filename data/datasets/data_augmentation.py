@@ -75,3 +75,36 @@ class DataAugmentation:
             cv_image = cv2.convertScaleAbs(cv_image, alpha=1, beta=brightness)
             cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
 
+    def block_set(self, frac, color):
+        folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/block"
+        utils.create_nested_folders(folder_path)
+
+        edgeCase = 0
+        subset_fraction = self.subset.sample(frac=frac)
+        for image in subset_fraction[0]:
+            drawn_pixels = set()
+            cv_image = cv2.imread(image)
+            row, col, _ = cv_image.shape
+            start_pixel = draw_pixel(drawn_pixels, row, col)
+            end_pixel = draw_pixel(drawn_pixels, row, col)
+            # check if end_pixel out of range or in front of start_pixel
+            if not end_pixel[0] > start_pixel[0]:
+                diff = start_pixel[0] - end_pixel[0]
+                end_pixel = (start_pixel[0] + diff, end_pixel[0])
+            if not end_pixel[1] > start_pixel[1]:
+                diff = start_pixel[1] - end_pixel[1]
+                end_pixel = (end_pixel[0], start_pixel[1] + diff)
+            if end_pixel[0] >= cv_image.shape[0]:
+                end_pixel = (cv_image.shape[0] - 1, end_pixel[1])
+            if end_pixel[1] >= cv_image.shape[0]:
+                end_pixel = (end_pixel[0], cv_image.shape[1] - 1)
+
+            rectangle = np.full((end_pixel[0]-start_pixel[0], end_pixel[1]-start_pixel[1], 3), color)
+            cv_image[start_pixel[0]:end_pixel[0], start_pixel[1]:end_pixel[1]] = rectangle
+
+            # cv2.rectangle(cv_image, start_pixel, end_pixel, color=color, thickness=-1)
+            cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
+            # print(f"Perturbed image {image.split('/')[-1][:-4]}, pixels: start{start_pixel}, end{end_pixel}")
+        # print(f"Perturbed {len(subset_fraction[0])} images and got {edgeCase} edgeCases")
+
+        # TODO: Add a file which tracks the number of signs blocked by the randomly drawn rectangle
