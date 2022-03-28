@@ -1,5 +1,11 @@
+import os
+
 import utils
+from utils import inner_circles
+from data.stickers import form_mappings
+from re import match as match_regex
 import numpy as np
+import pandas as pd
 import cv2
 
 
@@ -79,7 +85,6 @@ class DataAugmentation:
         folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/block"
         utils.create_nested_folders(folder_path)
 
-        edgeCase = 0
         subset_fraction = self.subset.sample(frac=frac)
         for image in subset_fraction[0]:
             drawn_pixels = set()
@@ -109,3 +114,43 @@ class DataAugmentation:
         # print(f"Perturbed {len(subset_fraction[0])} images and got {edgeCase} edgeCases")
 
         # TODO: Add a file which tracks the number of signs blocked by the randomly drawn rectangle
+
+    def add_stickers_to_set(self, frac):
+        form_to_func = {
+            "triangle_south": inner_circles.calc_radius_triangle_south,
+            "circle": inner_circles.get_radius_circle,
+            "triangle_north": inner_circles.calc_radius_triangle_north,
+            "stop_sign": inner_circles.get_radius_stop_sign,
+            "rhombus":  inner_circles.get_radius_rhombus
+        }
+
+        __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        sticker_repo_path = f"{__location__}/../stickers"
+        stickers = np.array([f"{sticker_repo_path}/{sticker}" for sticker in os.listdir(sticker_repo_path) if match_regex(".*([.](png))", sticker)])
+
+        folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/stickers"
+        utils.create_nested_folders(folder_path)
+
+        subset_fraction = self.subset.sample(frac=frac)
+        gt = pd.read_csv(f"{self.dataset.path}/{self.dataset.train_ground_truth}",
+                         sep=";",
+                        names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"]
+                         )
+        gt["ROI.HEIGHT"] = gt["Y2.ROI"] - gt["Y1.ROI"]
+        gt["ROI.WIDTH"] = gt["X2.ROI"] - gt["X1.ROI"]
+
+        for image in subset_fraction[0]:
+            cv_image = cv2.imread(image)
+            image_gt = gt[gt["Filename"] == image.split("/")[-1]]
+            for index, row in image_gt.iterrows():
+                sticker_path = np.random.choice(stickers)
+                sticker = cv2.imread(sticker_path)
+                startpoint = (row["X1.ROI"], row["Y1.ROI"])
+                endpoint = (row["X2.ROI"], row["Y2.ROI"])
+                r, cp = form_to_func.get(
+                    utils.get_key_by_value_of_list(form_mappings, row["classID"])
+                )(startpoint, endpoint)
+                # print(row)
+                cv_image = inner_circles.add_sticker_in_circle(gt=row, image=cv_image, radius=r, sticker=sticker, center=cp)
+            cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
+
