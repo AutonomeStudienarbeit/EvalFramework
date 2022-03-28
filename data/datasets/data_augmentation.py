@@ -3,6 +3,17 @@ import numpy as np
 import cv2
 
 
+def draw_pixel(already_perturbed_pixels, rows, cols):
+    new_pixel = False
+    while not new_pixel:
+        pixel = (
+            np.random.randint(0, rows),
+            np.random.randint(0, cols)
+        )
+        if pixel not in already_perturbed_pixels: new_pixel = True
+    return pixel
+
+
 class DataAugmentation:
 
     def __init__(self, dataset, subset_to_be_perturbed):
@@ -27,7 +38,7 @@ class DataAugmentation:
                 pil_image = pil_image.filter(ImageFilter.GaussianBlur(radius=radius))
                 pil_image.save(f"{folder_path}/{image.split('/')[-1][:-4]}.png")
 
-    def perturb_gaussian_noise(self, frac):
+    def perturb_set_gaussian_noise(self, frac):
         folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/gaussian_noise"
         utils.create_nested_folders(folder_path)
 
@@ -38,4 +49,29 @@ class DataAugmentation:
             gaussian = gaussian.reshape(cv_image.shape[0], cv_image.shape[1], cv_image.shape[2]).astype('uint8')
             perturbed_image = cv2.add(cv_image, gaussian)
             cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", perturbed_image)
+
+    def perturb_set_salt_pepper(self, frac_of_set, frac_of_images):
+        folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/salt_pepper"
+        utils.create_nested_folders(folder_path)
+
+        subset_fraction = self.subset.sample(frac=frac_of_set)
+        for image in subset_fraction[0]:
+            cv_image = cv2.imread(image)
+            row, col, _ = cv_image.shape
+            already_perturbed_pixels = set()
+            for i in range(int(row * col * frac_of_images)):
+                pixel = draw_pixel(already_perturbed_pixels, row, col)
+                already_perturbed_pixels.add(pixel)
+                cv_image[pixel[0], pixel[1]] = [255, 255, 255] if (np.random.randint(0, 2)) else [0, 0, 0]
+            cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
+
+    def perturb_set_image_brightness(self, frac, brightness):
+        folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/image_brightness"
+        utils.create_nested_folders(folder_path)
+
+        subset_fraction = self.subset.sample(frac=frac)
+        for image in subset_fraction[0]:
+            cv_image = cv2.imread(image)
+            cv_image = cv2.convertScaleAbs(cv_image, alpha=1, beta=brightness)
+            cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
 
