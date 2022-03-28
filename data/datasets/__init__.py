@@ -88,7 +88,8 @@ class Dataset:
     def _create_splits(self):
 
         # load available image filenames
-        filenames = [image for image in os.listdir(f"{self.path}/{self.dataset_properties.get('train_folder_path')}") if
+        train_dir = f"{self.path}/{self.dataset_properties.get('train_folder_path')}"
+        filenames = [f"{train_dir}/{image}" for image in os.listdir(train_dir) if
                      match_regex(".*([.](ppm|png|jpg))", image)]
         filenames = pd.DataFrame(filenames)
 
@@ -101,19 +102,37 @@ class Dataset:
         if self._validation_subset is not None:
             return self._validation_subset
 
+        val_dir = f"{self.path}/{self.dataset_properties.get('val_folder_path')}"
         if self.dataset_properties.get("val_folder_path") is not None:
-            self._test_subset = pd.DataFrame(os.listdir(f"{self.path}/{self.dataset_properties.get('val_folder_path')}"))
-            return self._test_subset
+            subset_list = []
+            for entry in os.listdir(val_dir):
+                if match_regex(".*([.](ppm|png|jpg))", entry):
+                    subset_list.append(f"{val_dir}/{entry}")
+                elif entry != "yolo" and not match_regex(".*([.](csv|txt))", entry):
+                    subset_list.extend([f"{val_dir}/{entry}/{image}" for image in os.listdir(f"{val_dir}/{entry}")])
+                self._validation_subset = pd.DataFrame(
+                    subset_list
+                )
+            return self._validation_subset
         else:
-            raise FileNotFoundError("Could not find Validation / val folder in dataset")
+            raise FileNotFoundError("Could not find Test / test folder in dataset")
 
     def load_train_subset(self):
         if self._train_subset is not None:
             return self._train_subset
 
+        train_dir = f"{self.path}/{self.dataset_properties.get('train_folder_path')}"
         if self.dataset_properties.get("train_folder_path") is not None:
-            self._test_subset = pd.DataFrame(os.listdir(f"{self.path}/{self.dataset_properties.get('train_folder_path')}"))
-            return self._test_subset
+            subset_list = []
+            for entry in os.listdir(train_dir):
+                if match_regex(".*([.](ppm|png|jpg))", entry):
+                    subset_list.append(f"{train_dir}/{entry}")
+                elif entry != "yolo" and not match_regex(".*([.](csv|txt))", entry):
+                    subset_list.extend([f"{train_dir}/{entry}/{image}" for image in os.listdir(f"{train_dir}/{entry}")])
+            self._train_subset = pd.DataFrame(
+                subset_list
+            )
+            return self._train_subset
         else:
             raise FileNotFoundError("Could not find Train / train folder in dataset")
 
@@ -121,8 +140,17 @@ class Dataset:
         if self._test_subset is not None:
             return self._test_subset
 
+        test_dir = f"{self.path}/{self.dataset_properties.get('test_folder_path')}"
         if self.dataset_properties.get("test_folder_path") is not None:
-            self._test_subset = pd.DataFrame(os.listdir(f"{self.path}/{self.dataset_properties.get('test_folder_path')}"))
+            subset_list = []
+            for entry in os.listdir(test_dir):
+                if match_regex(".*([.](ppm|png|jpg))", entry):
+                    subset_list.append(f"{test_dir}/{entry}")
+                elif entry != "yolo" and not match_regex(".*([.](csv|txt))", entry):
+                    subset_list.extend([f"{test_dir}/{entry}/{image}" for image in os.listdir(f"{test_dir}/{entry}")])
+                self._test_subset = pd.DataFrame(
+                    subset_list
+                )
             return self._test_subset
         else:
             raise FileNotFoundError("Could not find Test / test folder in dataset")

@@ -1,19 +1,11 @@
 import os
 import pandas as pd
 import numpy as np
-import json
-import multiprocessing as mp
 
 from shutil import move, copy2
-from re import match as match_regex
 from PIL import Image
-from pathlib import Path
 
-
-def create_nested_folders(*paths):
-    for path in paths:
-        p = Path(path)
-        p.mkdir(parents=True, exist_ok=True)
+from utils import create_nested_folders
 
 
 class YoloV5:
@@ -87,7 +79,6 @@ class YoloV5:
                 with open(f"{gtsrb_root}/{current_subset_id}/yolo/labels/{current_image[:-4]}.txt", "w+") as f:
                     f.write(f"{int(converted[0])} {' '.join(map(str, converted[1:]))}")
 
-    # TODO: remove split generation
     def _prepare_gtsdb(self, dataset):
         gtsdb_root = dataset.path
 
@@ -118,7 +109,6 @@ class YoloV5:
 
     def _prepare_gtsdb_split(self, split_df, split_name, gt_df, dataset):
         gtsdb_root = dataset.path
-        gtsdb_train = f"{gtsdb_root}/TrainIJCNN2013"
 
         create_nested_folders(
             f"{gtsdb_root}/yolo/{split_name}/images",
@@ -135,12 +125,12 @@ class YoloV5:
         # - Class numbers are zero-indexed (start from 0)
 
         for image in split_df[0]:
-            with Image.open(
-                    f"{gtsdb_train}/TrainIJCNN2013/{image}") as im:  # Yolo can't read images in ppm format
+            with Image.open(image) as im:  # Yolo can't read images in ppm format
+                image_file_name = image.split("/")[-1]
                 im.save(
-                    f"{gtsdb_root}/yolo/{split_name}/images/{image[:-4]}.jpg")  # Therefore instead of moving the image, the image is copied and converted simultaneously
-            with open(f"{gtsdb_root}/yolo/{split_name}/labels/{image[:-4]}.txt", "w+") as f:
-                image_df = gt_df.loc[gt_df["Filename"] == image]
+                    f"{gtsdb_root}/yolo/{split_name}/images/{image_file_name[:-4]}.jpg")  # Therefore instead of moving the image, the image is copied and converted simultaneously
+            with open(f"{gtsdb_root}/yolo/{split_name}/labels/{image_file_name[:-4]}.txt", "w+") as f:
+                image_df = gt_df.loc[gt_df["Filename"] == image_file_name]
                 gt_converted = np.array([
                     [
                         row.loc['classID'],
