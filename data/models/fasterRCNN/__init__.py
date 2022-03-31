@@ -57,7 +57,7 @@ class FasterRCNN():
         wandb.init(project='faster-r-cnn', name=f'faster_r-cnn_resnet50_fpn_{num_epochs}Epochs',
                    config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
         for epoch in range(num_epochs):
-            losses = train_one_epoch(self.model, self.optmizer, self.dataset_loader, self.device, epoch)
+            losses = train_one_epoch(self.model, self.optimizer, self.dataset_loader, self.device, epoch)
             wandb.log({"loss": losses.meters.get('loss').median,
                        "loss_classifier": losses.meters.get('loss_classifier').median,
                        "loss_box_reg": losses.meters.get('loss_box_reg').median,
