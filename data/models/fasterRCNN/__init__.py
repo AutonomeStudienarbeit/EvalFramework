@@ -65,7 +65,7 @@ class FasterRCNN():
                        "loss_objectness": losses.meters.get('loss_objectness').median,
                        "loss_rpn_box_reg": losses.meters.get('loss_rpn_box_reg').median})
             self.lr_scheduler.step()
-            self.validate()
+            self.validate(batch_size=batch_size)
 
     def validate(self, batch_size):
         self.dataset_loader = torch.utils.data.DataLoader(
@@ -75,7 +75,7 @@ class FasterRCNN():
             num_workers=4,
             collate_fn=collate_fn
         )
-        evaluation = evaluate(self.model, self.data_loader, self.device)
+        evaluation = evaluate(self.model, self.dataset_loader, self.device)
         evaluation_values = evaluation.coco_eval.get('bbox').stats
         wandb.log({"AP_IoU=0.50:0.95": evaluation_values[0],
                    "AP_IoU=0.50": evaluation_values[1],
