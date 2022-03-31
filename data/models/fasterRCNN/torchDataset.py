@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 import torch.utils.data
 from PIL import Image
+from os.path import exists
 
 import data.models.fasterRCNN.dependencys.transforms as t
 from utils import create_nested_folders
@@ -36,7 +37,7 @@ class TorchDataset(torch.utils.data.Dataset):
 
         if dataset.dataset_id == "GTSDB":
             self.annotation = pd.read_csv(gt_path, sep=";",
-                                      names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"])
+                                          names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"])
         else:
             self.annotation = pd.read_csv(gt_path)
             self.annotation = self.annotation.join(self.annotation["Path"].str.split("/", expand=True)).rename(
@@ -133,10 +134,11 @@ class TorchDataset(torch.utils.data.Dataset):
 
         subset = subset_switch.get(self.subset_name)()
         for image_path in subset[0]:
-            if image_path[-4:] != ".png":
-                with Image.open(image_path) as image:
-                    image_filename = image_path.split("/")[-1]
-                    image.save(f"{self.image_root}/{image_filename[:-4]}.png")
-                    image.close()
-            else:
-                copy2(image_path, f"{self.image_root}/")
+            if not exists(f"{self.image_root}/{image_path.split('/')[-1][:-4]}.png"):
+                if image_path[-4:] != ".png":
+                    with Image.open(image_path) as image:
+                        image_filename = image_path.split("/")[-1]
+                        image.save(f"{self.image_root}/{image_filename[:-4]}.png")
+                        image.close()
+                else:
+                    copy2(image_path, f"{self.image_root}/")
