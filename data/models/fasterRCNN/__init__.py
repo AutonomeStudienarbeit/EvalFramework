@@ -1,5 +1,6 @@
 import torch.utils.data
 import torchvision.models.detection
+import torch.multiprocessing
 import wandb
 
 from data.models.fasterRCNN.torchDataset import TorchDataset
@@ -47,6 +48,7 @@ class FasterRCNN():
         self.model_setup()
 
     def train(self, batch_size, num_epochs, print_freq):
+        if self.dataset.dataset_id == "GTSRB": torch.multiprocessing.set_sharing_strategy('file_system')
         self.dataset_loader = torch.utils.data.DataLoader(
             dataset=self.torch_dataset,
             batch_size=batch_size,
@@ -68,6 +70,7 @@ class FasterRCNN():
             self.validate(batch_size=batch_size)
 
     def validate(self, batch_size):
+        if self.dataset.dataset_id == "GTSRB": torch.multiprocessing.set_sharing_strategy('file_system')
         self.dataset_loader = torch.utils.data.DataLoader(
             dataset=self.torch_dataset,
             batch_size=batch_size,
