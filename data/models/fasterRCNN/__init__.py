@@ -25,6 +25,7 @@ class FasterRCNN():
         in_features = self.model.roi_heads.box_predictor.cls_score.in_features
         self.model.roi_heads.box_predictor = FastRCNNPredictor(in_features, self.num_classes)
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        self.model.to(self.device)
         params = [p for p in self.model.parameters() if p.requires_grad]
         self.optimizer = torch.optim.SGD(params, lr=0.005, momentum=0.9, weight_decay=0.0005)
         self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=3, gamma=0.1)
