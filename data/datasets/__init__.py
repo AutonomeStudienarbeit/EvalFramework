@@ -77,6 +77,7 @@ class Dataset:
         self.folders = [entry for entry in os.listdir(self.path) if match_regex("^(?!.*[.]).*", entry)]
         self.train_ground_truth = self.dataset_properties.get("gt_train_path")
         self.test_ground_truth = self.dataset_properties.get("gt_test_path")
+        self.number_of_classes = self.dataset_properties.get("number_of_classes")
 
         self._train_subset = None
         self._test_subset = None
