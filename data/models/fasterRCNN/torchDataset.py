@@ -44,7 +44,7 @@ class TorchDataset(torch.utils.data.Dataset):
         # |     |
         # - - x2/y2
 
-        image_df = self.annotation.loc[self.annotation["Filename"] == f"{filename}.ppm"]
+        image_df = self.annotation.loc[self.annotation["Filename"] == f"{filename}.ppm"].copy()
         boxes = [[
             row["X1.ROI"],
             row["Y1.ROI"],
@@ -95,7 +95,7 @@ class TorchDataset(torch.utils.data.Dataset):
         # converts the image, a PIL image, into a PyTorch Tensor
         # during training, randomly flip the training images
         # and ground-truth for data augmentation
-        return T.Compose(transforms)
+        return t.Compose(transforms)
 
     def _convert_images(self):
         subset_switch = {
@@ -105,7 +105,8 @@ class TorchDataset(torch.utils.data.Dataset):
         }
 
         subset = subset_switch.get(self.subset_name)()
-        for image_path in subset:
+        for image_path in subset[0]:
             with Image.open(image_path) as image:
                 image_filename = image_path.split("/")[-1]
                 image.save(f"{self.image_root}/{image_filename[:-4]}.png")
+                image.close()
