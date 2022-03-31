@@ -5,7 +5,7 @@ import wandb
 from data.models.fasterRCNN.torchDataset import TorchDataset
 from data.models.fasterRCNN.dependencys.utils import collate_fn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from dependencys.engine import train_one_epoch, evaluate
+from data.models.fasterRCNN.dependencys.engine import train_one_epoch, evaluate
 
 class FasterRCNN():
 

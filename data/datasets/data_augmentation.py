@@ -160,3 +160,5 @@ class DataAugmentation:
                                                                center=cp)
             cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
         return folder_path
+
+    #TODO: Add function that includes all augmentations into one folder
