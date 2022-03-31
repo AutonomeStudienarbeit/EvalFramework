@@ -17,8 +17,7 @@ class TorchDataset(torch.utils.data.Dataset):
 
         if self.subset_name == "train":
             self.transforms = self._get_transforms()
-        else:
-            self.transforms = None
+        else: self.transforms = None
 
         create_nested_folders(self.image_root)
         self._convert_images()
@@ -84,9 +83,9 @@ class TorchDataset(torch.utils.data.Dataset):
     def _remove_not_annotated_images(self):
         annotated_files = set([x[:-4] for x in self.annotation.Filename.unique()])
         files_without_annotations = set([x[:-4] for x in os.listdir(self.image_root)]) - annotated_files
-        to_be_removed = files_without_annotations.intersection(set([x[:-4] for x in self.imgs]))
-        for file in to_be_removed:
-            self.imgs.remove(f"{file}.png")
+        for file in files_without_annotations:
+            if file in self.imgs:
+                self.imgs.remove(file)
 
     def _get_transforms(self):
         transforms = [t.ToTensor(), t.RandomHorizontalFlip(0.5)]
