@@ -3,14 +3,14 @@
 # TODO: create torch dataset
 
 import os
+
+import pandas as pd
 import torch
 import torch.utils.data
 from PIL import Image
-import pandas as pd
+
+import data.models.fasterRCNN.dependencys.transforms as t
 from utils import create_nested_folders
-from engine import train_one_epoch, evaluate
-import utils
-import transforms as T
 
 
 class TorchDataset(torch.utils.data.Dataset):
@@ -73,12 +73,7 @@ class TorchDataset(torch.utils.data.Dataset):
         # suppose all instances are not crowd
         iscrowd = torch.zeros((num_boxes,), dtype=torch.int64)
 
-        target = {}
-        target["boxes"] = boxes
-        target["labels"] = labels
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
+        target = {"boxes": boxes, "labels": labels, "image_id": image_id, "area": area, "iscrowd": iscrowd}
 
         if self.transforms is not None:
             img, target = self.transforms(img, target)
@@ -96,7 +91,7 @@ class TorchDataset(torch.utils.data.Dataset):
                 self.imgs.remove(file)
 
     def _get_transforms(self):
-        transforms = [T.ToTensor(), T.RandomHorizontalFlip(0.5)]
+        transforms = [t.ToTensor(), t.RandomHorizontalFlip(0.5)]
         # converts the image, a PIL image, into a PyTorch Tensor
         # during training, randomly flip the training images
         # and ground-truth for data augmentation
@@ -112,5 +107,5 @@ class TorchDataset(torch.utils.data.Dataset):
         subset = subset_switch.get(self.subset_name)()
         for image_path in subset:
             with Image.open(image_path) as image:
-                image_filename = image.split("/")[-1]
+                image_filename = image_path.split("/")[-1]
                 image.save(f"{self.image_root}/{image_filename[:-4]}.png")
