@@ -32,7 +32,7 @@ class FasterRCNN():
     def set_backbone(self, backbone_name, is_pretrained):
         backbone_switch = {
             "resNet50_fpn": torchvision.models.detection.fasterrcnn_resnet50_fpn,
-            "mobilenet_v3_large_320_fpn": torchvision.models.detection.fasterrcnn_mobilenet
+            "mobilenet_v3_large_320_fpn": torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn
         }
         self.model = backbone_switch.get(backbone_name)(is_pretrained)
         self.model_setup()
