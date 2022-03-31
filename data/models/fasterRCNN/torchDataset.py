@@ -7,6 +7,7 @@ from PIL import Image
 
 import data.models.fasterRCNN.dependencys.transforms as t
 from utils import create_nested_folders
+from shutil import move, copy2
 
 
 class TorchDataset(torch.utils.data.Dataset):
@@ -26,8 +27,20 @@ class TorchDataset(torch.utils.data.Dataset):
         # load all image files, sorting them to
         # ensure that they are aligned
         self.imgs = list(sorted(os.listdir(self.image_root)))
-        self.annotation = pd.read_csv(f"{self.dataset.path}/{self.dataset.train_ground_truth}", sep=";",
+        if subset_name == "train":
+            gt_path = f"{self.dataset.path}/{self.dataset.train_ground_truth}"
+        elif subset_name == "test" and self.dataset.test_ground_truth is not None:
+            gt_path = f"{self.dataset.path}/{self.dataset.test_ground_truth}"
+        else:
+            gt_path = f"{self.dataset.path}/{self.dataset.train_ground_truth}"
+
+        if dataset.dataset_id == "GTSDB":
+            self.annotation = pd.read_csv(gt_path, sep=";",
                                       names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"])
+        else:
+            self.annotation = pd.read_csv(gt_path)
+            self.annotation = self.annotation.join(self.annotation["Path"].str.split("/", expand=True)).rename(
+                columns={2: 'File'})
 
         self._remove_not_annotated_images()
 
@@ -42,15 +55,26 @@ class TorchDataset(torch.utils.data.Dataset):
         # |     |
         # - - x2/y2
 
-        image_df = self.annotation.loc[self.annotation["Filename"] == f"{filename}.ppm"].copy()
-        boxes = [[
-            row["X1.ROI"],
-            row["Y1.ROI"],
-            row["X2.ROI"],
-            row["Y2.ROI"]
-        ] for idx, row in image_df.iterrows()]
-        image_df["classID"] = image_df["classID"] + 1
-        labels = list(image_df["classID"])
+        if self.dataset.dataset_id == "GTSDB":
+            image_df = self.annotation.loc[self.annotation["Filename"] == f"{filename}.ppm"].copy()
+            boxes = [[
+                row["X1.ROI"],
+                row["Y1.ROI"],
+                row["X2.ROI"],
+                row["Y2.ROI"]
+            ] for idx, row in image_df.iterrows()]
+            image_df["classID"] = image_df["classID"] + 1
+            labels = list(image_df["classID"])
+        else:
+            image_df = self.annotation.loc[self.annotation['File'] == f"{filename}.png"].copy()
+            boxes = [[
+                row["Roi.X1"],
+                row["Roi.Y1"],
+                row["Roi.X2"],
+                row["Roi.Y2"]
+            ] for idx, row in image_df.iterrows()]
+            image_df["ClassId"] = image_df["ClassId"] + 1
+            labels = list(image_df["ClassId"])
 
         # for i in enumerate(self.annotation.itertuples()):
         #     if (i[1][1][:-4] == filename):
@@ -82,7 +106,12 @@ class TorchDataset(torch.utils.data.Dataset):
         return len(self.imgs)
 
     def _remove_not_annotated_images(self):
-        annotated_files = set([x[:-4] for x in self.annotation.Filename.unique()])
+
+        if self.dataset.dataset_id == "GTSDB":
+            annotated_files = set([x[:-4] for x in self.annotation.Filename.unique()])
+        else:
+            annotated_files = set([x[:-4] for x in self.annotation.File.unique()])
+
         files_without_annotations = set([x[:-4] for x in os.listdir(self.image_root)]) - annotated_files
         to_be_removed = files_without_annotations.intersection(set([x[:-4] for x in self.imgs]))
         for file in to_be_removed:
@@ -104,7 +133,10 @@ class TorchDataset(torch.utils.data.Dataset):
 
         subset = subset_switch.get(self.subset_name)()
         for image_path in subset[0]:
-            with Image.open(image_path) as image:
-                image_filename = image_path.split("/")[-1]
-                image.save(f"{self.image_root}/{image_filename[:-4]}.png")
-                image.close()
+            if image_path[-4:] != ".png":
+                with Image.open(image_path) as image:
+                    image_filename = image_path.split("/")[-1]
+                    image.save(f"{self.image_root}/{image_filename[:-4]}.png")
+                    image.close()
+            else:
+                copy2(image_path, f"{self.image_root}/")
