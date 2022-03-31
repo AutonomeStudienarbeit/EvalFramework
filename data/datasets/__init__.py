@@ -77,6 +77,7 @@ class Dataset:
         self.folders = [entry for entry in os.listdir(self.path) if match_regex("^(?!.*[.]).*", entry)]
         self.train_ground_truth = self.dataset_properties.get("gt_train_path")
         self.test_ground_truth = self.dataset_properties.get("gt_test_path")
+        self.number_of_classes = self.dataset_properties.get("number_of_classes")
 
         self._train_subset = None
         self._test_subset = None
@@ -97,6 +98,20 @@ class Dataset:
         return np.split(filenames.sample(frac=1, random_state=42),
                         [int(.6 * len(filenames)),
                          int(.8 * len(filenames))])  # train: 80%, val: 20%, test: 20%
+
+    def set_augmentated_set(self, dataset_folder_path):
+        split_name = dataset_folder_path.split("/")[-2]
+        if split_name == "train":
+            self._train_subset = pd.DataFrame(
+                [f"{dataset_folder_path}/{image}" for image in os.listdir(dataset_folder_path)])
+        elif split_name == "test":
+            self._test_subset = pd.DataFrame(
+                [f"{dataset_folder_path}/{image}" for image in os.listdir(dataset_folder_path)])
+        elif split_name == "val":
+            self._validation_subset = pd.DataFrame(
+                [f"{dataset_folder_path}/{image}" for image in os.listdir(dataset_folder_path)])
+        else:
+            raise ValueError("Invalid Splitname in folder path")
 
     def load_validation_subset(self):
         if self._validation_subset is not None:

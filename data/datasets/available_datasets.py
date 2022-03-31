@@ -12,6 +12,7 @@ available_datasets = {
         "test_folder_path": "Test",
         "val_folder_path": None,
         "image_format": "png",
+        "number_of_classes": 43,
         "version": ""
     },
     "GTSDB": {
@@ -27,6 +28,7 @@ available_datasets = {
         "test_folder_path": None,
         "val_folder_path": None,
         "image_format": "ppm",
+        "number_of_classes": 43,
         "version": ""
     }
 }

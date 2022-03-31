@@ -43,6 +43,7 @@ class DataAugmentation:
             with Image.open(image) as pil_image:
                 pil_image = pil_image.filter(ImageFilter.GaussianBlur(radius=radius))
                 pil_image.save(f"{folder_path}/{image.split('/')[-1][:-4]}.png")
+        return folder_path
 
     def perturb_set_gaussian_noise(self, frac):
         folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/gaussian_noise"
@@ -55,6 +56,7 @@ class DataAugmentation:
             gaussian = gaussian.reshape(cv_image.shape[0], cv_image.shape[1], cv_image.shape[2]).astype('uint8')
             perturbed_image = cv2.add(cv_image, gaussian)
             cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", perturbed_image)
+        return folder_path
 
     def perturb_set_salt_pepper(self, frac_of_set, frac_of_images):
         folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/salt_pepper"
@@ -70,6 +72,7 @@ class DataAugmentation:
                 already_perturbed_pixels.add(pixel)
                 cv_image[pixel[0], pixel[1]] = [255, 255, 255] if (np.random.randint(0, 2)) else [0, 0, 0]
             cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
+        return folder_path
 
     def perturb_set_image_brightness(self, frac, brightness):
         folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/image_brightness"
@@ -80,6 +83,7 @@ class DataAugmentation:
             cv_image = cv2.imread(image)
             cv_image = cv2.convertScaleAbs(cv_image, alpha=1, beta=brightness)
             cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
+        return folder_path
 
     def block_set(self, frac, color):
         folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/block"
@@ -106,13 +110,13 @@ class DataAugmentation:
             if end_pixel[1] >= cv_image.shape[0]:
                 end_pixel = (end_pixel[0], cv_image.shape[1] - 1)
 
-            rectangle = np.full((end_pixel[0]-start_pixel[0], end_pixel[1]-start_pixel[1], 3), color)
+            rectangle = np.full((end_pixel[0] - start_pixel[0], end_pixel[1] - start_pixel[1], 3), color)
             cv_image[start_pixel[0]:end_pixel[0], start_pixel[1]:end_pixel[1]] = rectangle
 
             cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
             # print(f"Perturbed image {image.split('/')[-1][:-4]}, pixels: start{start_pixel}, end{end_pixel}")
         # print(f"Perturbed {len(subset_fraction[0])} images and got {edgeCase} edgeCases")
-
+        return folder_path
         # TODO: Add a file which tracks the number of signs blocked by the randomly drawn rectangle
 
     def add_stickers_to_set(self, frac):
@@ -121,12 +125,13 @@ class DataAugmentation:
             "circle": inner_circles.get_radius_circle,
             "triangle_north": inner_circles.calc_radius_triangle_north,
             "stop_sign": inner_circles.get_radius_stop_sign,
-            "rhombus":  inner_circles.get_radius_rhombus
+            "rhombus": inner_circles.get_radius_rhombus
         }
 
         __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
         sticker_repo_path = f"{__location__}/../stickers"
-        stickers = np.array([f"{sticker_repo_path}/{sticker}" for sticker in os.listdir(sticker_repo_path) if match_regex(".*([.](png))", sticker)])
+        stickers = np.array([f"{sticker_repo_path}/{sticker}" for sticker in os.listdir(sticker_repo_path) if
+                             match_regex(".*([.](png))", sticker)])
 
         folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/stickers"
         utils.create_nested_folders(folder_path)
@@ -134,7 +139,7 @@ class DataAugmentation:
         subset_fraction = self.subset.sample(frac=frac)
         gt = pd.read_csv(f"{self.dataset.path}/{self.dataset.train_ground_truth}",
                          sep=";",
-                        names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"]
+                         names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"]
                          )
         gt["ROI.HEIGHT"] = gt["Y2.ROI"] - gt["Y1.ROI"]
         gt["ROI.WIDTH"] = gt["X2.ROI"] - gt["X1.ROI"]
@@ -151,6 +156,7 @@ class DataAugmentation:
                     utils.get_key_by_value_of_list(form_mappings, row["classID"])
                 )(startpoint, endpoint)
                 # print(row)
-                cv_image = inner_circles.add_sticker_in_circle(gt=row, image=cv_image, radius=r, sticker=sticker, center=cp)
+                cv_image = inner_circles.add_sticker_in_circle(gt=row, image=cv_image, radius=r, sticker=sticker,
+                                                               center=cp)
             cv2.imwrite(f"{folder_path}/{image.split('/')[-1][:-4]}.png", cv_image)
-
+        return folder_path
