@@ -99,6 +99,20 @@ class Dataset:
                         [int(.6 * len(filenames)),
                          int(.8 * len(filenames))])  # train: 80%, val: 20%, test: 20%
 
+    def set_augmentated_set(self, dataset_folder_path):
+        split_name = dataset_folder_path.split("/")[-2]
+        if split_name == "train":
+            self._train_subset = pd.DataFrame(
+                [f"{dataset_folder_path}/{image}" for image in os.listdir(dataset_folder_path)])
+        elif split_name == "test":
+            self._test_subset = pd.DataFrame(
+                [f"{dataset_folder_path}/{image}" for image in os.listdir(dataset_folder_path)])
+        elif split_name == "val":
+            self._validation_subset = pd.DataFrame(
+                [f"{dataset_folder_path}/{image}" for image in os.listdir(dataset_folder_path)])
+        else:
+            raise ValueError("Invalid Splitname in folder path")
+
     def load_validation_subset(self):
         if self._validation_subset is not None:
             return self._validation_subset

@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 from os import listdir, getcwd, path
 
@@ -43,3 +44,12 @@ class DataAugmentationTests(TestCase):
         gtsdb_dataset = dataset_loader.load_dataset("GTSDB")
         data_augmentation = DataAugmentation(dataset=gtsdb_dataset, subset_to_be_perturbed="test")
         data_augmentation.add_stickers_to_set(frac=0.5)
+
+    def test_load_augmentation(self):
+        dataset_loader = DatasetLoader()
+        gtsdb_dataset = dataset_loader.load_dataset("GTSDB")
+        data_augmentation = DataAugmentation(dataset=gtsdb_dataset, subset_to_be_perturbed="test")
+        path = data_augmentation.blur_set(radius=4, frac=0.5)
+        gtsdb_dataset.set_augmentated_set(path)
+        train_set = set(gtsdb_dataset.load_test_subset()[0])
+        self.assertSetEqual(set([f"{path}/{image}" for image in os.listdir(path)]), train_set, "Subsets not Equal")
