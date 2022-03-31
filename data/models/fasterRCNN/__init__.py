@@ -13,7 +13,7 @@ class FasterRCNN():
         self.model = None
         self.torch_dataset = None
         self.dataset_loader = None
-        self.model = torchvision.models.detection.faster_rcnn(True)
+        self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn(True)
         self.num_classes = dataset.number_of_classes
         self.dataset = dataset
         self.optimizer = None
