@@ -8,6 +8,7 @@ from data.models.fasterRCNN.dependencys.utils import collate_fn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from data.models.fasterRCNN.dependencys.engine import train_one_epoch, evaluate
 
+
 class FasterRCNN():
 
     def __init__(self, dataset):
@@ -60,19 +61,24 @@ class FasterRCNN():
         wandb.init(project='faster-r-cnn', name=f'faster_r-cnn_resnet50_fpn_{num_epochs}Epochs',
                    config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
         for epoch in range(num_epochs):
-            losses = train_one_epoch(self.model, self.optimizer, self.dataset_loader, self.device, epoch, print_freq=print_freq)
+            losses = train_one_epoch(self.model, self.optimizer, self.dataset_loader, self.device, epoch,
+                                     print_freq=print_freq)
             wandb.log({"loss": losses.meters.get('loss').median,
                        "loss_classifier": losses.meters.get('loss_classifier').median,
                        "loss_box_reg": losses.meters.get('loss_box_reg').median,
                        "loss_objectness": losses.meters.get('loss_objectness').median,
                        "loss_rpn_box_reg": losses.meters.get('loss_rpn_box_reg').median})
             self.lr_scheduler.step()
-            self.validate(batch_size=batch_size)
+            self.validate(batch_size=batch_size, dataset=self.dataset, subset_name="test")
 
-    def validate(self, batch_size):
+    def validate(self, batch_size, dataset=None, subset_name=None):
         if self.dataset.dataset_id == "GTSRB": torch.multiprocessing.set_sharing_strategy('file_system')
+        if dataset is not None and subset_name is not None:
+            tmp_torch_dataset = TorchDataset(dataset=dataset, subset_name=subset_name)
+        else:
+            tmp_torch_dataset = self.torch_dataset
         self.dataset_loader = torch.utils.data.DataLoader(
-            dataset=self.torch_dataset,
+            dataset=tmp_torch_dataset,
             batch_size=batch_size,
             shuffle=False,
             num_workers=4,
