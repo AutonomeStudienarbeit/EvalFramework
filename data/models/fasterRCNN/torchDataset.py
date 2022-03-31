@@ -1,7 +1,3 @@
-# TODO: convert images to png
-# TODO: include get_transforms
-# TODO: create torch dataset
-
 import os
 
 import pandas as pd
