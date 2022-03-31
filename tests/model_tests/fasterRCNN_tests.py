@@ -17,7 +17,10 @@ class FasterRCNNTests(TestCase):
 
         # fasterRCNN.torch_dataset.__getitem__(0)
 
-        torchDataset.__getitem__(0)
+        targets = []
+        for i in range(len(os.listdir(f"{gtsdb_dataset.path}/fasterRCNN/train/images"))):
+            image, target = torchDataset.__getitem__(i)
+            targets.append(target)
 
         for file in os.listdir(f"{gtsdb_dataset.path}/fasterRCNN/train/images"):
             self.assertEqual(file[-4:], ".png", "File Endings do not match .png")
