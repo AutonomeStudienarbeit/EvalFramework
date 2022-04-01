@@ -9,11 +9,11 @@ class FasterRCNNTests(TestCase):
 
     def test_dataset_prep_gtsdb(self):
         dataset_loader = DatasetLoader()
-        gtsdb_dataset = dataset_loader.load_dataset("GTSDB")
+        gtsdb_dataset = dataset_loader.load_dataset("GTSRB")
         # fasterRCNN = FasterRCNN(gtsdb_dataset)
         # fasterRCNN.prepare_dataset(gtsdb_dataset, "train")
 
-        torchDataset = TorchDataset(gtsdb_dataset, "train")
+        torchDataset = TorchDataset(gtsdb_dataset, "test")
 
         # fasterRCNN.torch_dataset.__getitem__(0)
 

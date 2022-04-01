@@ -40,8 +40,8 @@ class TorchDataset(torch.utils.data.Dataset):
                                           names=["Filename", "X1.ROI", "Y1.ROI", "X2.ROI", "Y2.ROI", "classID"])
         else:
             self.annotation = pd.read_csv(gt_path)
-            self.annotation = self.annotation.join(self.annotation["Path"].str.split("/", expand=True)).rename(
-                columns={2: 'File'})
+            self.annotation = self.annotation.join(self.annotation["Path"].str.split("/", expand=True))
+            self.annotation.set_axis([*self.annotation.columns[:-1], 'File'], axis=1, inplace=True)
 
         self._remove_not_annotated_images()
 
