@@ -101,7 +101,7 @@ class TorchDataset(torch.utils.data.Dataset):
         if self.transforms is not None:
             img, target = self.transforms(img, target)
         else:
-            img, target = t.ToTensor()
+            img, target = t.Compose([t.ToTensor()])(img, target)
 
         return img, target
 
