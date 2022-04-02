@@ -21,6 +21,7 @@ class FasterRCNN():
         self.optimizer = None
         self.device = None
         self.lr_scheduler = None
+        self.wandb_logged_in = False
         self.model_setup()
 
     def model_setup(self):
@@ -57,9 +58,12 @@ class FasterRCNN():
             num_workers=4,
             collate_fn=collate_fn
         )
-        wandb.login
-        wandb.init(project='faster-r-cnn', name=f'faster_r-cnn_resnet50_fpn_{num_epochs}Epochs',
+        if not self.wandb_logged_in:
+            wandb.login
+            wandb.init(project='faster-r-cnn', name=f'faster_r-cnn_resnet50_fpn_train_{self.dataset.dataset_id}_{num_epochs}Epochs',
                    config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
+            self.wandb_logged_in = True
+
         for epoch in range(num_epochs):
             losses = train_one_epoch(self.model, self.optimizer, self.dataset_loader, self.device, epoch,
                                      print_freq=print_freq)
@@ -72,7 +76,14 @@ class FasterRCNN():
             self.validate(batch_size=batch_size, dataset=self.dataset, subset_name="test")
 
     def validate(self, batch_size, dataset=None, subset_name=None):
-        if self.dataset.dataset_id == "GTSRB": torch.multiprocessing.set_sharing_strategy('file_system')
+        if dataset.dataset_id == "GTSRB": torch.multiprocessing.set_sharing_strategy('file_system')
+
+        if not self.wandb_logged_in:
+            wandb.login
+            wandb.init(project='faster-r-cnn', name=f'faster_r-cnn_resnet50_fpn_validate_{dataset.dataset_id}',
+                   config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
+            self.wandb_logged_in = True
+        
         if dataset is not None and subset_name is not None:
             tmp_torch_dataset = TorchDataset(dataset=dataset, subset_name=subset_name)
         else:
