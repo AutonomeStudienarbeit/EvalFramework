@@ -7,11 +7,15 @@ from data.models.fasterRCNN.torchDataset import TorchDataset
 from data.models.fasterRCNN.dependencys.utils import collate_fn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from data.models.fasterRCNN.dependencys.engine import train_one_epoch, evaluate
+from os import path as os_path, getcwd
+from os.path import exists
+from datetime import datetime
 
 
 class FasterRCNN():
 
     def __init__(self, dataset):
+        self.__location__ = os_path.realpath(os_path.join(getcwd(), os_path.dirname(__file__)))
         self.model = None
         self.torch_dataset = None
         self.dataset_loader = None
@@ -22,6 +26,7 @@ class FasterRCNN():
         self.device = None
         self.lr_scheduler = None
         self.wandb_logged_in = False
+        self.backbone = "Default"
         self.model_setup()
 
     def model_setup(self):
@@ -39,6 +44,7 @@ class FasterRCNN():
             "mobilenet_v3_large_320_fpn": torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn
         }
         self.model = backbone_switch.get(backbone_name)(is_pretrained)
+        self.backbone = backbone_name
         self.model_setup()
 
     def prepare_dataset(self, subset_name):
@@ -74,6 +80,7 @@ class FasterRCNN():
                        "loss_rpn_box_reg": losses.meters.get('loss_rpn_box_reg').median})
             self.lr_scheduler.step()
             self.validate(batch_size=batch_size, dataset=self.dataset, subset_name="test")
+        save()
 
     def validate(self, batch_size, dataset=None, subset_name=None):
         if dataset.dataset_id == "GTSRB": torch.multiprocessing.set_sharing_strategy('file_system')
@@ -83,7 +90,7 @@ class FasterRCNN():
             wandb.init(project='faster-r-cnn', name=f'faster_r-cnn_resnet50_fpn_validate_{dataset.dataset_id}',
                    config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
             self.wandb_logged_in = True
-        
+
         if dataset is not None and subset_name is not None:
             tmp_torch_dataset = TorchDataset(dataset=dataset, subset_name=subset_name)
         else:
@@ -103,3 +110,17 @@ class FasterRCNN():
                    "AR_IoU=0.50:0.95_maxDets=1": evaluation_values[6],
                    "AR_IoU=0.50:0.95_maxDets=10": evaluation_values[7],
                    "AR_IoU=0.50:0.95_maxDets=100": evaluation_values[8]})
+
+    def save(self):
+        states = self.model.state_dict() # get weights and biases of current model
+        path = f"{self.__location__}/out/fasterRCNN_{self.backbone}_{self.dataset.dataset_id}_{datetime.now().strftime('%d-%m-%Y-%H:%M:%S')}.pt"
+        torch.save(states, path)
+
+    def load_model(self, path):
+        if not exists(path):
+            raise Exception(f"File: {path} does not exist")
+        filename = path.split("/")[-1]
+        backbone = filename.split("_")[1]
+        self.set_backbone(backbone_name=backbone, is_pretrained=True)
+        self.model.load_state_dict(torch.load(path))
+        self.model_setup()
