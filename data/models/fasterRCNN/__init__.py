@@ -3,6 +3,7 @@ import torchvision.models.detection
 import torch.multiprocessing
 import wandb
 
+import utils
 from data.models.fasterRCNN.torchDataset import TorchDataset
 from data.models.fasterRCNN.dependencys.utils import collate_fn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
@@ -112,6 +113,7 @@ class FasterRCNN():
                    "AR_IoU=0.50:0.95_maxDets=100": evaluation_values[8]})
 
     def save(self):
+        utils.create_nested_folders(f"{self.__location__}/out/")
         states = self.model.state_dict() # get weights and biases of current model
         path = f"{self.__location__}/out/fasterRCNN_{self.backbone}_{self.dataset.dataset_id}_{datetime.now().strftime('%d-%m-%Y-%H:%M:%S')}.pt"
         torch.save(states, path)
