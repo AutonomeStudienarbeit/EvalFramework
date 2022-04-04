@@ -13,12 +13,23 @@ class YoloV5:
     def __init__(self):
         self.__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-    def prepare_dataset(self, dataset):
+    def prepare_dataset(self, dataset, is_data_augmentation=False, data_augmentation_path=None, task='val'):
         dataset_funcs = {
             "GTSRB": self._prepare_gtsrb,
             "GTSDB": self._prepare_gtsdb,
         }
         dataset_funcs.get(dataset.dataset_id)(dataset)
+        if is_data_augmentation:
+             self.copy_augmented_data(dataset, data_augmentation_path, task)
+
+    def copy_augmented_data(self, dataset, data_augmentation_path, task):
+        yolo_folder = f"{dataset.path}/yolo/{task}/images"
+        for image in os.listdir(yolo_folder):
+            os.remove(f"{yolo_folder}/{image}")
+
+        for image in os.listdir(data_augmentation_path):
+            copy2(f"{data_augmentation_path}/{image}", yolo_folder)
+
 
     def _prepare_gtsrb(self, dataset):
         # collect gtsrb file paths in txt file, so that yolo can read the dataset
@@ -99,6 +110,8 @@ class YoloV5:
         val = dataset.load_validation_subset()
         test = dataset.load_test_subset()
 
+        print("prepared subset: ", val)
+
         print(len(train))
         print(len(val))
         print(len(test))
@@ -128,7 +141,7 @@ class YoloV5:
             with Image.open(image) as im:  # Yolo can't read images in ppm format
                 image_file_name = image.split("/")[-1]
                 im.save(
-                    f"{gtsdb_root}/yolo/{split_name}/images/{image_file_name[:-4]}.jpg")  # Therefore instead of moving the image, the image is copied and converted simultaneously
+                    f"{gtsdb_root}/yolo/{split_name}/images/{image_file_name[:-4]}.png")  # Therefore instead of moving the image, the image is copied and converted simultaneously
             with open(f"{gtsdb_root}/yolo/{split_name}/labels/{image_file_name[:-4]}.txt", "w+") as f:
                 image_df = gt_df.loc[gt_df["Filename"] == image_file_name]
                 gt_converted = np.array([

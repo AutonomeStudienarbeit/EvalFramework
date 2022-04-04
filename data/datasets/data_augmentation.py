@@ -33,6 +33,8 @@ class DataAugmentation:
         self.subset_name = subset_to_be_perturbed
         self.subset = subset_switch.get(subset_to_be_perturbed)()
 
+        print("data auf subset:", self.subset)
+
     def blur_set(self, radius, frac):
         from PIL import Image, ImageFilter
         folder_path = f"{self.dataset.path}/data-augmentation/{self.subset_name}/blur"
