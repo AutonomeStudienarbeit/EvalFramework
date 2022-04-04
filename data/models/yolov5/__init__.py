@@ -6,12 +6,23 @@ from shutil import move, copy2
 from PIL import Image
 
 from utils import create_nested_folders
+import data.models.yolov5.yolov5_git.train as yolo_train
+import data.models.yolov5.yolov5_git.val as yolo_val
 
 
 class YoloV5:
 
     def __init__(self):
         self.__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+    def train(self, dataset, batch_size, weights, img_size, num_epochs, device=0):
+        yml = f"{dataset.dataset_id.lower()}.yaml"
+        yolo_train.run(data=yml, imgsz=img_size, weights=weights, device=device, batch_size=batch_size,
+                       epochs=num_epochs)
+
+    def val(self, dataset, batch_size, weights, img_size, device=0, task='val'):
+        yml = f"{dataset.dataset_id.lower()}.yaml"
+        yolo_val.run(data=yml, batch_size=batch_size, imgsz=img_size, device=device, weights=weights, task=task)
 
     def prepare_dataset(self, dataset, is_data_augmentation=False, data_augmentation_path=None, task='val'):
         dataset_funcs = {
@@ -20,7 +31,7 @@ class YoloV5:
         }
         dataset_funcs.get(dataset.dataset_id)(dataset)
         if is_data_augmentation:
-             self.copy_augmented_data(dataset, data_augmentation_path, task)
+            self.copy_augmented_data(dataset, data_augmentation_path, task)
 
     def copy_augmented_data(self, dataset, data_augmentation_path, task):
         yolo_folder = f"{dataset.path}/yolo/{task}/images"
@@ -29,7 +40,6 @@ class YoloV5:
 
         for image in os.listdir(data_augmentation_path):
             copy2(f"{data_augmentation_path}/{image}", yolo_folder)
-
 
     def _prepare_gtsrb(self, dataset):
         # collect gtsrb file paths in txt file, so that yolo can read the dataset
