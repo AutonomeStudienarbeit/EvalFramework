@@ -117,6 +117,7 @@ class FasterRCNN():
         states = self.model.state_dict() # get weights and biases of current model
         path = f"{self.__location__}/out/fasterRCNN_{self.backbone}_{self.dataset.dataset_id}_{datetime.now().strftime('%d-%m-%Y-%H:%M:%S')}.pt"
         torch.save(states, path)
+        return path
 
     def load_model(self, path):
         if not exists(path):
