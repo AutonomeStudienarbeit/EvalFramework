@@ -81,7 +81,7 @@ class FasterRCNN():
                        "loss_rpn_box_reg": losses.meters.get('loss_rpn_box_reg').median})
             self.lr_scheduler.step()
             self.validate(batch_size=batch_size, dataset=self.dataset, subset_name="test")
-        self.save()
+        return self.save()
 
     def validate(self, batch_size, dataset=None, subset_name=None):
         if dataset.dataset_id == "GTSRB": torch.multiprocessing.set_sharing_strategy('file_system')
