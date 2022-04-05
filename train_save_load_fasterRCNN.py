@@ -14,8 +14,8 @@ print("[+] Preparing Dataset for Model finished")
 fasterRCNN.set_backbone("resNet50_fpn", True)
 print("[+] Backbone Set")
 print("[*] starting training")
-fasterRCNN.train(batch_size=4, num_epochs=10, print_freq=10)
-path = fasterRCNN.save()
+path = fasterRCNN.train(batch_size=4, num_epochs=10, print_freq=10)
+
 
 print("[*] loading Dataset")
 gtsdb_dataset = loader.load_dataset("GTSDB")

@@ -67,8 +67,9 @@ class FasterRCNN():
         )
         if not self.wandb_logged_in:
             wandb.login
-            wandb.init(project='faster-r-cnn', name=f'faster_r-cnn_resnet50_fpn_train_{self.dataset.dataset_id}_{num_epochs}Epochs',
-                   config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
+            wandb.init(project='faster-r-cnn',
+                       name=f'faster_r-cnn_resnet50_fpn_train_{self.dataset.dataset_id}_{num_epochs}Epochs',
+                       config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
             self.wandb_logged_in = True
 
         for epoch in range(num_epochs):
@@ -81,7 +82,7 @@ class FasterRCNN():
                        "loss_rpn_box_reg": losses.meters.get('loss_rpn_box_reg').median})
             self.lr_scheduler.step()
             self.validate(batch_size=batch_size, dataset=self.dataset, subset_name="test")
-        save()
+        return self.save()
 
     def validate(self, batch_size, dataset=None, subset_name=None):
         if dataset.dataset_id == "GTSRB": torch.multiprocessing.set_sharing_strategy('file_system')
@@ -89,7 +90,7 @@ class FasterRCNN():
         if not self.wandb_logged_in:
             wandb.login
             wandb.init(project='faster-r-cnn', name=f'faster_r-cnn_resnet50_fpn_validate_{dataset.dataset_id}',
-                   config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
+                       config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
             self.wandb_logged_in = True
 
         if dataset is not None and subset_name is not None:
@@ -114,8 +115,8 @@ class FasterRCNN():
 
     def save(self):
         utils.create_nested_folders(f"{self.__location__}/out/")
-        states = self.model.state_dict() # get weights and biases of current model
-        path = f"{self.__location__}/out/fasterRCNN_{self.backbone}_{self.dataset.dataset_id}_{datetime.now().strftime('%d-%m-%Y-%H:%M:%S')}.pt"
+        states = self.model.state_dict()  # get weights and biases of current model
+        path = f"{self.__location__}/out/fasterRCNN-{self.backbone}-{self.dataset.dataset_id}-{datetime.now().strftime('%d_%m_%Y_%H:%M:%S')}.pt"
         torch.save(states, path)
         return path
 
@@ -123,7 +124,7 @@ class FasterRCNN():
         if not exists(path):
             raise Exception(f"File: {path} does not exist")
         filename = path.split("/")[-1]
-        backbone = filename.split("_")[1]
+        backbone = filename.split("-")[1]
         self.set_backbone(backbone_name=backbone, is_pretrained=True)
         self.model.load_state_dict(torch.load(path))
         self.model_setup()
