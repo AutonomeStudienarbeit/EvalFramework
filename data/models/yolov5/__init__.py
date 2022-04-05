@@ -21,7 +21,7 @@ class YoloV5:
                        epochs=num_epochs)
 
     def val(self, dataset, batch_size, weights, img_size, device=0, task='val'):
-        yml = f"{dataset.dataset_id.lower()}.yaml"
+        yml = f"{self.__location__}/yolov5_git/data/{dataset.dataset_id.lower()}.yaml"
         yolo_val.run(data=yml, batch_size=batch_size, imgsz=img_size, device=device, weights=weights, task=task)
 
     def prepare_dataset(self, dataset, is_data_augmentation=False, data_augmentation_path=None, task='val'):
