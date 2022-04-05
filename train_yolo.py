@@ -9,3 +9,5 @@ data_augmentation = DataAugmentation(dataset=gtsdb_dataset, subset_to_be_perturb
 data_augment_path = data_augmentation.blur_set(radius=4, frac=1)
 yoloV5.prepare_dataset(dataset=gtsdb_dataset, is_data_augmentation=True, data_augmentation_path=data_augment_path)
 
+yoloV5.train(gtsdb_dataset, batch_size=2, weights='yolov5m.pt', img_size=1360, num_epochs=1)
+yoloV5.val(dataset=gtsdb_dataset, batch_size=2, weights='yolov5m.pt', img_size=1360)
