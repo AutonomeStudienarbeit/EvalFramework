@@ -4,3 +4,6 @@
 [submodule "data/datasets/road-dataset"]
 	path = data/datasets/road-dataset
 	url = git@github.com:AutonomeStudienarbeit/road-dataset.git
+[submodule "data/models/yolov5/yolov5_git"]
+	path = data/models/yolov5/yolov5_git
+	url = git@github.com:AutonomeStudienarbeit/yolov5.git
