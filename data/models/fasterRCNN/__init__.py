@@ -89,7 +89,7 @@ class FasterRCNN():
 
         if not self.wandb_logged_in:
             wandb.login
-            wandb.init(project='faster-r-cnn', name=f'faster_r-cnn_resnet50_fpn_validate_{dataset.dataset_id}',
+            wandb.init(project='faster-r-cnn/val', name=f'faster_r-cnn_resnet50_fpn_validate_{dataset.dataset_id}',
                        config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
             self.wandb_logged_in = True
 
