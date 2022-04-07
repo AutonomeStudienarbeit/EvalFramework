@@ -1,5 +1,6 @@
 from data.datasets import DatasetLoader
 from data.models.fasterRCNN import FasterRCNN
+import wandb
 
 loader = DatasetLoader()
 print("Running Experiment for: random init GTSDB resnet_50")
@@ -18,6 +19,7 @@ print("[*] starting training")
 fasterRCNN.train(batch_size=4, num_epochs=10, print_freq=100)
 path = fasterRCNN.save()
 print(f"[+] model saved to {path}")
+wandb.finish()
 
 print("\n-----------------------------------------------------------------------------------------------------------------\n")
 print("Running Experiment for: random init GTSRB resnet_50")
@@ -36,6 +38,7 @@ print("[*] starting training")
 fasterRCNN.train(batch_size=4, num_epochs=10, print_freq=1000)
 path = fasterRCNN.save()
 print(f"[+] model saved to {path}")
+wandb.finish()
 
 print("\n-----------------------------------------------------------------------------------------------------------------\n")
 print("Running Experiment for: COCO transfer GTSRB mobilenet")
@@ -54,6 +57,7 @@ print("[*] starting training")
 fasterRCNN.train(batch_size=4, num_epochs=10, print_freq=1000)
 path = fasterRCNN.save()
 print(f"[+] model saved to {path}")
+wandb.finish()
 
 print("\n-----------------------------------------------------------------------------------------------------------------\n")
 print("Running Experiment for: random init GTSDB mobilenet")
@@ -72,6 +76,7 @@ print("[*] starting training")
 fasterRCNN.train(batch_size=4, num_epochs=10, print_freq=100)
 path = fasterRCNN.save()
 print(f"[+] model saved to {path}")
+wandb.finish()
 
 print("\n-----------------------------------------------------------------------------------------------------------------\n")
 print("Running Experiment for: random init GTSRB mobilenet")
@@ -90,6 +95,7 @@ print("[*] starting training")
 fasterRCNN.train(batch_size=4, num_epochs=10, print_freq=1000)
 path = fasterRCNN.save()
 print(f"[+] model saved to {path}")
+wandb.finish()
 
 print("\n-----------------------------------------------------------------------------------------------------------------\n")
 print("Running Experiment for: COCO transfer GTSDB mobilenet")
@@ -108,5 +114,6 @@ print("[*] starting training")
 fasterRCNN.train(batch_size=4, num_epochs=10, print_freq=100)
 path = fasterRCNN.save()
 print(f"[+] model saved to {path}")
+wandb.finish()
 
 
