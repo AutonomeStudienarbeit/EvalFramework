@@ -67,7 +67,7 @@ class FasterRCNN():
         )
         if not self.wandb_logged_in:
             wandb.login
-            wandb.init(project=f'faster-r-cnn/{self.backbone}/train',
+            wandb.init(project=f'faster-r-cnn-{self.backbone}-train',
                        name=f'faster_r-cnn_resnet50_fpn_train_{self.dataset.dataset_id}_{num_epochs}Epochs',
                        config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
             self.wandb_logged_in = True
@@ -89,7 +89,7 @@ class FasterRCNN():
 
         if not self.wandb_logged_in:
             wandb.login
-            wandb.init(project=f'faster-r-cnn/{self.backbone}/val', name=f'faster_r-cnn_resnet50_fpn_validate_{dataset.dataset_id}',
+            wandb.init(project=f'faster-r-cnn-{self.backbone}-val', name=f'faster_r-cnn_resnet50_fpn_validate_{dataset.dataset_id}',
                        config={"architecture": "CNN"})
             self.wandb_logged_in = True
 
