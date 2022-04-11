@@ -68,7 +68,7 @@ class FasterRCNN():
         if not self.wandb_logged_in:
             wandb.login
             wandb.init(project=f'faster-r-cnn-{self.backbone}-train',
-                       name=f'faster_r-cnn_resnet50_fpn_train_{self.dataset.dataset_id}_{num_epochs}Epochs',
+                       name=f'faster_r-cnn_{self.backbone}_train_{self.dataset.dataset_id}_{num_epochs}Epochs',
                        config={"learning_rate": 0.005, "architecture": "CNN", "epochs": num_epochs})
             self.wandb_logged_in = True
 
@@ -84,12 +84,12 @@ class FasterRCNN():
             self.validate(batch_size=batch_size, dataset=self.dataset, subset_name="test")
         return self.save()
 
-    def validate(self, batch_size, dataset=None, subset_name=None):
+    def validate(self, batch_size, dataset=None, subset_name=None, augmentation_name=''):
         if dataset.dataset_id == "GTSRB": torch.multiprocessing.set_sharing_strategy('file_system')
 
         if not self.wandb_logged_in:
             wandb.login
-            wandb.init(project=f'faster-r-cnn-{self.backbone}-val', name=f'faster_r-cnn_resnet50_fpn_validate_{dataset.dataset_id}',
+            wandb.init(project=f'faster-r-cnn-{self.backbone}-val', name=f'faster_r-cnn_{self.backbone}_validate_{dataset.dataset_id}_{augmentation_name}',
                        config={"architecture": "CNN"})
             self.wandb_logged_in = True
 
