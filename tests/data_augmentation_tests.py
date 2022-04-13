@@ -42,8 +42,8 @@ class DataAugmentationTests(TestCase):
     def test_add_sticker(self):
         dataset_loader = DatasetLoader()
         gtsdb_dataset = dataset_loader.load_dataset("GTSDB")
-        data_augmentation = DataAugmentation(dataset=gtsdb_dataset, subset_to_be_perturbed="test")
-        data_augmentation.add_stickers_to_set(frac=0.5)
+        data_augmentation = DataAugmentation(dataset=gtsdb_dataset, subset_to_be_perturbed="val")
+        data_augmentation.add_stickers_to_set(1)
 
     def test_load_augmentation(self):
         dataset_loader = DatasetLoader()

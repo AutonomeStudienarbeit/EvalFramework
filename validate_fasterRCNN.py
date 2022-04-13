@@ -5,8 +5,10 @@ import wandb
 import numpy as np
 
 loader = DatasetLoader()
-models_to_run = ['fasterRCNN-mobilenet_v3_large_320_fpn-COCO-transfer-GTSDB-07_04_2022_23:33:25.pt',
-                 'fasterRCNN-resNet50_fpn-COCO-transfer-GTSDB-10_04_2022_14:11:12.pt']
+# models_to_run = ['fasterRCNN-mobilenet_v3_large_320_fpn-COCO-transfer-GTSDB-07_04_2022_23:33:25.pt',
+#                  'fasterRCNN-resNet50_fpn-COCO-transfer-GTSDB-10_04_2022_14:11:12.pt']
+
+models_to_run = ['fasterRCNN-resNet50_fpn-COCO-transfer-GTSDB-10_04_2022_14:11:12.pt']
 
 for model in models_to_run:
 

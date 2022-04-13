@@ -34,6 +34,7 @@ class DataAugmentation:
         self.subset = subset_switch.get(subset_to_be_perturbed)()
 
         print("data auf subset:", self.subset)
+        self.subset.to_csv("debug.csv")
 
     def blur_set(self, radius, frac):
         from PIL import Image, ImageFilter
