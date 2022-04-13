@@ -15,7 +15,7 @@ yoloV5 = YoloV5()
 # yoloV5.prepare_dataset(dataset=gtsdb_dataset)
 # yoloV5.val(dataset=gtsdb_dataset, batch_size=2, weights='e100-yolov5m-gtsrb-gtsdb-best.pt', img_size=1360, device=1)
 
-# loader = DatasetLoader()
+loader = DatasetLoader()
 
 # for i in range(1, 11):
 #     print(

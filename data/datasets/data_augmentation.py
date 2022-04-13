@@ -150,11 +150,16 @@ class DataAugmentation:
         for image in subset_fraction[0]:
             cv_image = cv2.imread(image)
             image_gt = gt[gt["Filename"] == image.split("/")[-1]]
+            file_out = image.split("/")[-1]
+            print(f"perturbing image: {file_out}")
             for index, row in image_gt.iterrows():
                 sticker_path = np.random.choice(stickers)
                 sticker = cv2.imread(sticker_path)
                 startpoint = (row["X1.ROI"], row["Y1.ROI"])
                 endpoint = (row["X2.ROI"], row["Y2.ROI"])
+                classID = row["classID"]
+                form = utils.get_key_by_value_of_list(form_mappings, row["classID"])
+                print(f"currentClass: {classID}, corresponds to Form: {form}")
                 r, cp = form_to_func.get(
                     utils.get_key_by_value_of_list(form_mappings, row["classID"])
                 )(startpoint, endpoint)
